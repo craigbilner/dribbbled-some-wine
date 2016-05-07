@@ -56,17 +56,25 @@
 
   const appendChild = container => child => container.appendChild(child);
 
-  const createCards = (el, wine) => {
+  const createCards = wine => {
     const card = document.createElement('div');
     card.className = 'wine_card';
 
-    return appendChild(el)(card);
+    return card;
+  };
+
+  const makeActive = activeIndx => (el, indx) => {
+    if (activeIndx === indx) {
+      el.classList.add('card--active');
+    }
+
+    return el;
   };
 
   const view = (el, model) => {
     el.className = 'wine';
     el.style = 'background-color: rgba(238, 123, 111, 1);';
-    compose(reduce(createCards)(el), appendChild(el))(model.wines);
+    compose(map(createCards), map(makeActive(0)), map(appendChild(el)))(model.wines);
   };
 
   WineApp(model, update, view)(data)(document.getElementById('main'));
