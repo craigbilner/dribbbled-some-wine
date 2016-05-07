@@ -4,5 +4,13 @@
 }
 
 .wine {
-    background-color: red;
+    height: 100vh;
+}
+
+.colour_1 {
+    background-color: rgba(238, 123, 111, 1);
+}
+
+.colour_2 {
+    background-color: rgba(250, 202, 138, 1)
 }

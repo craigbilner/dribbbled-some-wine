@@ -17,18 +17,57 @@
     },
   ];
 
-  const WineApp = (model, update, view) => data => el => {
-    view(el);
+  const map = func => data => data.map(func);
+
+  const reduce = func => init => data => data.reduce(func, init);
+
+  const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
+
+  const objKeys = Object.keys;
+
+  const freezeIt = Object.freeze;
+
+  const writeMissingKeys = (newModel, key) => {
+    if (!newModel[key]) {
+      newModel[key] = model[key];
+    }
+
+    return newModel;
   };
 
-  const model = Object.freeze({});
+  const updateModel = ({ model, obj }) => reduce(writeMissingKeys)(obj)(objKeys(model));
+
+  const createModel = (model, obj) => {
+    if (!obj) return Object.freeze(model);
+
+    return compose(updateModel, freezeIt)({ model, obj });
+  };
+
+  const WineApp = (model, update, view) => data => el => {
+    view(el, createModel(model, {
+      wines: data,
+    }));
+  };
+
+  const model = createModel({});
 
   const update = () => {
   };
 
-  const view = (el) => {
-    el.innerHTML = 'tests';
+  const appendChild = container => child => container.appendChild(child);
+
+  const createCards = (el, wine) => {
+    const card = document.createElement('div');
+    card.className = 'wine_card';
+
+    return appendChild(el)(card);
   };
 
-  WineApp(model, update, view)(data)(document.getElementById('main'))
+  const view = (el, model) => {
+    el.className = 'wine';
+    el.style = 'background-color: rgba(238, 123, 111, 1);';
+    compose(reduce(createCards)(el), appendChild(el))(model.wines);
+  };
+
+  WineApp(model, update, view)(data)(document.getElementById('main'));
 }
