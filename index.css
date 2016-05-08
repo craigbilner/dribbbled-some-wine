@@ -5,6 +5,16 @@
 
 .wine {
     height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.wine_card {
+    width: 85vw;
+    height: 75vh;
+    background-color: white;
+    position: absolute;
+    border-radius: 1rem;
 }
 
 .colour_1 {
