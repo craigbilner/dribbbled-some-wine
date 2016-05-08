@@ -1,21 +1,5 @@
 {
-  const data = [
-    {
-      name: 'Barolo',
-      fullName: 'Barolo di castiglione falletto',
-      price: 550,
-    },
-    {
-      name: 'Moscato',
-      fullName: 'Moscato d\'asti',
-      price: 550,
-      desc: 'Moscato tends to be a popular white wine among wine lovers and enjoys a significant following with ' +
-      'seasoned wine enthusiasts who enjoy a lighter-styled wine',
-      origin: 'Asti, Italy',
-      type: 'DOCG',
-      alcohol: 11,
-    },
-  ];
+  // utils
 
   const map = func => data => data.map(func);
 
@@ -25,6 +9,12 @@
 
   const freezeIt = Object.freeze;
 
+  const appendChild = container => child => container.appendChild(child);
+
+  const hasClass = className => el => [...el.classList].indexOf(className) > -1;
+
+  // model
+
   const updateModel = ({ model, obj }) => Object.assign({}, model, obj);
 
   const createModel = (model, obj) => {
@@ -33,32 +23,20 @@
     return compose(updateModel, freezeIt)({ model, obj });
   };
 
-  const WineApp = (model, update, view, updateView) => data => el => {
-    let newModel = updateModel({
-      model,
-      obj: {
-        wines: data,
-      }
-    });
-
-    view(el, newModel, params => {
-      newModel = update(newModel)(params);
-      requestAnimationFrame(() => updateView(el)(newModel));
-    });
-  };
-
-  const actions = {
-    TOUCH_START: 'TOUCH_START',
-    TOUCH_MOVE: 'TOUCH_MOVE',
-    TOUCH_END: 'TOUCH_END',
-  };
-
   const model = createModel({
     wines: [],
     startX: 0,
     deltaX: 0,
     offset: 0,
   });
+
+  // update
+
+  const actions = {
+    TOUCH_START: 'TOUCH_START',
+    TOUCH_MOVE: 'TOUCH_MOVE',
+    TOUCH_END: 'TOUCH_END',
+  };
 
   const update = model => ({ action, payload: { x } }) => {
     switch (action) {
@@ -92,7 +70,7 @@
     }
   };
 
-  const appendChild = container => child => container.appendChild(child);
+  // view
 
   const createCards = wine => {
     const card = document.createElement('div');
@@ -111,8 +89,6 @@
 
     return el;
   };
-
-  const hasClass = className => el => [...el.classList].indexOf(className) > -1;
 
   const eventListener = update => action => ({ target, touches }) => {
     if (hasClass('wine_card')(target)) {
@@ -143,6 +119,40 @@
 
   const updateView = el => model => {
     el.querySelector('.wine_card--active').style = `transform: translate(calc(7.5vw - ${-model.deltaX}px), 15vh)`;
+  };
+
+  // app
+
+  const data = [
+    {
+      name: 'Barolo',
+      fullName: 'Barolo di castiglione falletto',
+      price: 550,
+    },
+    {
+      name: 'Moscato',
+      fullName: 'Moscato d\'asti',
+      price: 550,
+      desc: 'Moscato tends to be a popular white wine among wine lovers and enjoys a significant following with ' +
+      'seasoned wine enthusiasts who enjoy a lighter-styled wine',
+      origin: 'Asti, Italy',
+      type: 'DOCG',
+      alcohol: 11,
+    },
+  ];
+
+  const WineApp = (model, update, view, updateView) => data => el => {
+    let newModel = updateModel({
+      model,
+      obj: {
+        wines: data,
+      }
+    });
+
+    view(el, newModel, params => {
+      newModel = update(newModel)(params);
+      requestAnimationFrame(() => updateView(el)(newModel));
+    });
   };
 
   WineApp(model, update, view, updateView)(data)(document.getElementById('main'));
