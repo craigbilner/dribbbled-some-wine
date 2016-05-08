@@ -27,7 +27,6 @@
     wines: [],
     startX: 0,
     deltaX: 0,
-    offset: 0,
   });
 
   // update
@@ -38,32 +37,49 @@
     TOUCH_END: 'TOUCH_END',
   };
 
-  const update = model => ({ action, payload: { x } }) => {
+  const handleTouchMove = (model, { x }) => {
+    return updateModel({
+      model,
+      obj: {
+        deltaX: x - model.startX,
+      }
+    });
+  };
+
+  const handleTouchStart = (model, { x }) => {
+    return updateModel({
+      model,
+      obj: {
+        startX: x,
+      }
+    });
+  };
+
+  const handleTouchEnd = (model, { x }) => {
+    const pcntOffset = Math.abs(model.deltaX) / model.width * 100;
+    const shouldTransition = pcntOffset > 40;
+
+    return updateModel({
+      model,
+      obj: {
+        currentX: null,
+        deltaX: 0,
+        offset: model.deltaX,
+        shouldTransition,
+      }
+    });
+  };
+
+  const update = model => ({ action, payload }) => {
     switch (action) {
     case actions.TOUCH_START:
-      return updateModel({
-        model,
-        obj: {
-          startX: x,
-        }
-      });
+      return handleTouchStart(model, payload);
       break;
     case actions.TOUCH_MOVE:
-      return updateModel({
-        model,
-        obj: {
-          deltaX: x - model.startX + model.offset,
-        }
-      });
+      return handleTouchMove(model, payload);
       break;
     case actions.TOUCH_END:
-      return updateModel({
-        model,
-        obj: {
-          currentX: null,
-          offset: model.deltaX,
-        }
-      });
+      return handleTouchEnd(model, payload);
       break;
     default:
       throw new Error('unknown action');
@@ -117,8 +133,15 @@
     compose(map(createCards), map(makeActive(0)), map(appendChild(el)))(model.wines);
   };
 
-  const updateView = el => model => {
-    el.querySelector('.wine_card--active').style = `transform: translate(calc(7.5vw - ${-model.deltaX}px), 15vh)`;
+  const updateView = el => ({ shouldTransition, width, deltaX }) => {
+    const offset = shouldTransition ? width : -deltaX;
+    let style = `transform: translate(calc(7.5vw - ${offset}px), 15vh);`;
+
+    if (shouldTransition) {
+      style += ' transition: transform 100ms ease-out;';
+    }
+
+    el.querySelector('.wine_card--active').style = style;
   };
 
   // app
@@ -146,6 +169,7 @@
       model,
       obj: {
         wines: data,
+        width: el.offsetWidth,
       }
     });
 
