@@ -17,6 +17,10 @@
     border-radius: 1rem;
 }
 
+.wine_card--active {
+    background-color: yellow;
+}
+
 .colour_1 {
     background-color: rgba(238, 123, 111, 1);
 }

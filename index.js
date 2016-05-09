@@ -23,10 +23,18 @@
     return compose(updateModel, freezeIt)({ model, obj });
   };
 
+  const direction = {
+    LEFT: 'LEFT',
+    RIGHT: 'RIGHT',
+    NEITHER: 'NEITHER',
+  };
+
   const model = createModel({
     wines: [],
     startX: 0,
     deltaX: 0,
+    activeIndx: 0,
+    swipeDir: direction.NEITHER,
   });
 
   // update
@@ -38,10 +46,13 @@
   };
 
   const handleTouchMove = (model, { x }) => {
+    const deltaX = x - model.startX;
+
     return updateModel({
       model,
       obj: {
-        deltaX: x - model.startX,
+        deltaX,
+        swipeDir: deltaX < 0 ? direction.LEFT : direction.RIGHT,
       }
     });
   };
@@ -51,13 +62,27 @@
       model,
       obj: {
         startX: x,
+        shouldTransition: false,
       }
     });
   };
 
-  const handleTouchEnd = (model, { x }) => {
-    const pcntOffset = Math.abs(model.deltaX) / model.width * 100;
-    const shouldTransition = pcntOffset > 40;
+  const newActiveIndx = (shouldSwipeAway, oldIndx, swipeDir) => {
+    if (shouldSwipeAway) {
+      return oldIndx + (swipeDir === direction.LEFT ? 1 : -1);
+    } else {
+      return oldIndx;
+    }
+  };
+
+  const canSwipe = (pcntOffset, activeIndx, cards) => {
+    return pcntOffset < -40 && activeIndx < cards.length - 1 || pcntOffset > 40 && activeIndx > 0;
+  };
+
+  const handleTouchEnd = model => {
+    const pcntOffset = model.deltaX / model.width * 100;
+    const shouldSwipeAway = canSwipe(pcntOffset, model.activeIndx, model.wines);
+    const activeIndx = newActiveIndx(shouldSwipeAway, model.activeIndx, model.swipeDir);
 
     return updateModel({
       model,
@@ -65,7 +90,10 @@
         currentX: null,
         deltaX: 0,
         offset: model.deltaX,
-        shouldTransition,
+        shouldSwipeAway,
+        shouldTransition: true,
+        activeIndx,
+        swipeDir: direction.NEITHER
       }
     });
   };
@@ -88,20 +116,22 @@
 
   // view
 
-  const createCards = wine => {
+  const createCard = wine => {
     const card = document.createElement('div');
     card.className = 'wine_card';
+    card.textContent = wine.name;
 
     return card;
   };
 
-  const makeActive = activeIndx => (el, indx) => {
+  const cardTransform = offset => `transform: translate(${offset}vw, 15vh)`;
+
+  const positionCard = activeIndx => (el, indx) => {
     if (activeIndx === indx) {
       el.classList.add('wine_card--active');
-      el.style = 'transform: translate(7.5vw, 15vh)';
-    } else {
-      el.style = 'transform: translate(107.5vw, 15vh)';
     }
+
+    el.style = cardTransform(7.5 + (100 * indx));
 
     return el;
   };
@@ -120,7 +150,7 @@
     }
   };
 
-  const view = (el, model, update) => {
+  const view = (el, { activeIndx, wines }, update) => {
     const doUpdate = eventListener(update);
 
     el.addEventListener('touchstart', doUpdate(actions.TOUCH_START));
@@ -130,19 +160,37 @@
     el.className = 'wine';
     el.style = 'background-color: rgba(238, 123, 111, 1);';
 
-    compose(map(createCards), map(makeActive(0)), map(appendChild(el)))(model.wines);
+    compose(map(createCard), map(positionCard(activeIndx)), map(appendChild(el)))(wines);
   };
 
-  const updateView = el => ({ shouldTransition, width, deltaX }) => {
-    const offset = shouldTransition ? width : -deltaX;
-    let style = `transform: translate(calc(7.5vw - ${offset}px), 15vh);`;
+  const calcStyle = (offset, shouldTransition) => initOffset => {
+    let style = `transform: translate(calc(${initOffset} - ${offset}px), 15vh);`;
 
     if (shouldTransition) {
-      style += ' transition: transform 100ms ease-out;';
+      style += ' transition: transform 1000ms ease-out;';
     }
 
-    el.querySelector('.wine_card--active').style = style;
+    return style;
   };
+
+  const updateCard = model => (el, indx) => {
+    const offset = model.shouldSwipeAway ? model.width : -model.deltaX;
+    const styleCalc = calcStyle(offset, model.shouldTransition);
+
+    if (model.activeIndx === indx) {
+      if (!hasClass('wine_card--active')(el)) {
+        el.classList.add('wine_card--active');
+      }
+    } else {
+      if (hasClass('wine_card--active')(el)) {
+        el.classList = Array.from(el.classList).shift();
+      }
+    }
+
+    el.style = styleCalc(`${7.5 + (indx * 100)}vw`);
+  };
+
+  const updateView = el => model => map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
 
   // app
 
@@ -175,6 +223,7 @@
 
     view(el, newModel, params => {
       newModel = update(newModel)(params);
+      console.log(newModel);
       requestAnimationFrame(() => updateView(el)(newModel));
     });
   };
