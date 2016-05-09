@@ -1,11 +1,17 @@
 {
   // utils
 
+  const identity = x => () => x;
+
+  const add = a => b => a + b;
+
   const map = func => data => data.map(func);
 
   const reduce = func => init => data => data.reduce(func, init);
 
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
+
+  const ifThen = (condition, truthey, falsey) => x => condition(x) ? truthey(x) : falsey(x);
 
   const freezeIt = Object.freeze;
 
@@ -71,13 +77,7 @@
     });
   };
 
-  const newActiveIndx = (shouldSwipeAway, oldIndx, swipeDir) => {
-    if (shouldSwipeAway) {
-      return oldIndx + (swipeDir === direction.LEFT ? 1 : -1);
-    } else {
-      return oldIndx;
-    }
-  };
+  const crementIndx = swipeDir => _ => ifThen(identity(swipeDir === direction.LEFT), identity(1), identity(-1))(_);
 
   const swipingOffEnd = (swipeDir, activeIndx, cards) => {
     const swipingOffRight = swipeDir === direction.RIGHT && activeIndx === 0;
@@ -108,7 +108,8 @@
 
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
-    const activeIndx = newActiveIndx(shouldSwipeAway, model.activeIndx, model.swipeDir);
+    const indxChange = ifThen(identity(shouldSwipeAway), crementIndx(model.swipeDir), identity(0));
+    const activeIndx = add(indxChange())(model.activeIndx);
 
     return updateModel({
       model,
