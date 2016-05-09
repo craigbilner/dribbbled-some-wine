@@ -33,8 +33,11 @@
     wines: [],
     startX: 0,
     deltaX: 0,
+    offset: 0,
+    shouldSwipeAway: false,
+    shouldTransition: false,
     activeIndx: 0,
-    swipeDir: direction.NEITHER,
+    swipeDir: direction.NEITHER
   });
 
   // update
@@ -45,24 +48,25 @@
     TOUCH_END: 'TOUCH_END',
   };
 
-  const handleTouchMove = (model, { x }) => {
-    const deltaX = x - model.startX;
-
-    return updateModel({
-      model,
-      obj: {
-        deltaX,
-        swipeDir: deltaX < 0 ? direction.LEFT : direction.RIGHT,
-      }
-    });
-  };
-
   const handleTouchStart = (model, { x }) => {
     return updateModel({
       model,
       obj: {
         startX: x,
         shouldTransition: false,
+        shouldSwipeAway: false,
+      }
+    });
+  };
+
+  const handleTouchMove = (model, { x }) => {
+    const deltaX = model.startX - x;
+
+    return updateModel({
+      model,
+      obj: {
+        deltaX,
+        swipeDir: deltaX > 0 ? direction.LEFT : direction.RIGHT,
       }
     });
   };
@@ -75,21 +79,42 @@
     }
   };
 
-  const canSwipe = (pcntOffset, activeIndx, cards) => {
-    return pcntOffset < -40 && activeIndx < cards.length - 1 || pcntOffset > 40 && activeIndx > 0;
+  const swipingOffEnd = (swipeDir, activeIndx, cards) => {
+    const swipingOffRight = swipeDir === direction.RIGHT && activeIndx === 0;
+    if (swipingOffRight) return true;
+
+    return swipeDir === direction.LEFT && activeIndx === (cards.length - 1);
+  };
+
+  const canSwipe = model => {
+    if (swipingOffEnd(model.swipeDir, model.activeIndx, model.wines)) return false;
+
+    const pcntOffset = Math.abs(model.deltaX) / model.width * 100;
+
+    return pcntOffset > 40;
+  };
+
+  const calculateOffset = (shouldSwipeAway, offset, width, swipeDir) => {
+    let total = offset;
+
+    if (shouldSwipeAway && swipeDir === direction.LEFT) {
+      total = total + width;
+    } else if (shouldSwipeAway) {
+      total = total - width;
+    }
+
+    return total;
   };
 
   const handleTouchEnd = model => {
-    const pcntOffset = model.deltaX / model.width * 100;
-    const shouldSwipeAway = canSwipe(pcntOffset, model.activeIndx, model.wines);
+    const shouldSwipeAway = canSwipe(model);
     const activeIndx = newActiveIndx(shouldSwipeAway, model.activeIndx, model.swipeDir);
 
     return updateModel({
       model,
       obj: {
-        currentX: null,
         deltaX: 0,
-        offset: model.deltaX,
+        offset: calculateOffset(shouldSwipeAway, model.offset, model.width, model.swipeDir),
         shouldSwipeAway,
         shouldTransition: true,
         activeIndx,
@@ -167,15 +192,16 @@
     let style = `transform: translate(calc(${initOffset} - ${offset}px), 15vh);`;
 
     if (shouldTransition) {
-      style += ' transition: transform 1000ms ease-out;';
+      style += ' transition: transform 100ms ease-out;';
     }
 
     return style;
   };
 
   const updateCard = model => (el, indx) => {
-    const offset = model.shouldSwipeAway ? model.width : -model.deltaX;
-    const styleCalc = calcStyle(offset, model.shouldTransition);
+    const styleCalc = calcStyle(model.deltaX + model.offset, model.shouldTransition);
+
+    el.style = styleCalc(`${7.5 + (indx * 100)}vw`);
 
     if (model.activeIndx === indx) {
       if (!hasClass('wine_card--active')(el)) {
@@ -186,8 +212,6 @@
         el.classList = Array.from(el.classList).shift();
       }
     }
-
-    el.style = styleCalc(`${7.5 + (indx * 100)}vw`);
   };
 
   const updateView = el => model => map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
@@ -223,7 +247,7 @@
 
     view(el, newModel, params => {
       newModel = update(newModel)(params);
-      console.log(newModel);
+      //console.log(newModel);
       requestAnimationFrame(() => updateView(el)(newModel));
     });
   };
