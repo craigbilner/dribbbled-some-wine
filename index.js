@@ -79,15 +79,20 @@
 
   const crementIndx = swipeDir => _ => ifThen(identity(swipeDir === direction.LEFT), identity(1), identity(-1))(_);
 
-  const swipingOffEnd = (swipeDir, activeIndx, cards) => {
-    const swipingOffRight = swipeDir === direction.RIGHT && activeIndx === 0;
-    if (swipingOffRight) return true;
+  const isFirstCard = indx => indx === 0;
 
-    return swipeDir === direction.LEFT && activeIndx === (cards.length - 1);
-  };
+  const isLastCard = cards => indx => indx === (cards.length - 1);
+
+  const swipingOffRight = swipeDir => indx => swipeDir === direction.RIGHT && isFirstCard(indx);
+
+  const swipingOffLeft = cards => swipeDir => indx => swipeDir === direction.LEFT && isLastCard(cards)(indx);
 
   const canSwipe = model => {
-    if (swipingOffEnd(model.swipeDir, model.activeIndx, model.wines)) return false;
+    if (ifThen(
+        swipingOffRight(model.swipeDir),
+        identity(true),
+        swipingOffLeft(model.wines)(model.swipeDir)
+      )(model.activeIndx)) return false;
 
     const pcntOffset = Math.abs(model.deltaX) / model.width * 100;
 
