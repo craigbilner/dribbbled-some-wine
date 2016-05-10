@@ -1,9 +1,11 @@
 {
   // utils
 
-  const identity = x => () => x;
+  const always = x => () => x;
 
   const add = a => b => a + b;
+
+  const subtract = a => b => a - b;
 
   const map = func => data => data.map(func);
 
@@ -77,7 +79,7 @@
     });
   };
 
-  const crementIndx = swipeDir => _ => ifThen(identity(swipeDir === direction.LEFT), identity(1), identity(-1))(_);
+  const crementIndx = swipeDir => _ => ifThen(always(swipeDir === direction.LEFT), always(1), always(-1))(_);
 
   const isFirstCard = indx => indx === 0;
 
@@ -89,7 +91,7 @@
 
   const isSwipingOff = ifThen(
     swipingOffRight,
-    identity(true),
+    always(true),
     swipingOffLeft
   );
 
@@ -99,30 +101,32 @@
 
   const isOutsideTolerance = compose(pcntOffset, outside40);
 
-  const canSwipe = ifThen(isSwipingOff, identity(false), isOutsideTolerance);
+  const canSwipe = ifThen(isSwipingOff, always(false), isOutsideTolerance);
 
-  const calculateOffset = (shouldSwipeAway, offset, width, swipeDir) => {
-    let total = offset;
+  const hasSweptLeft = shouldSwipeAway => ({ swipeDir }) => shouldSwipeAway && swipeDir === direction.LEFT;
 
-    if (shouldSwipeAway && swipeDir === direction.LEFT) {
-      total = total + width;
-    } else if (shouldSwipeAway) {
-      total = total - width;
-    }
+  const addToOffset = ({ offset }) => add(offset);
 
-    return total;
-  };
+  const subtractFromOffset = ({ offset }) => subtract(offset);
+
+  const viewportWidth = ({ width }) => width;
+
+  const currentOffset = ({ offset }) => always(offset);
+
+  const determineOffset = shouldSwipeAway => ifThen(always(shouldSwipeAway), subtractFromOffset, currentOffset);
+
+  const calculateOffset = shouldSwipeAway => ifThen(hasSweptLeft(shouldSwipeAway), addToOffset, determineOffset(shouldSwipeAway));
 
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
-    const indxChange = ifThen(identity(shouldSwipeAway), crementIndx(model.swipeDir), identity(0));
+    const indxChange = ifThen(always(shouldSwipeAway), crementIndx(model.swipeDir), always(0));
     const activeIndx = add(indxChange())(model.activeIndx);
 
     return updateModel({
       model,
       obj: {
         deltaX: 0,
-        offset: calculateOffset(shouldSwipeAway, model.offset, model.width, model.swipeDir),
+        offset: calculateOffset(shouldSwipeAway)(model)(viewportWidth(model)),
         shouldSwipeAway,
         shouldTransition: true,
         activeIndx,
