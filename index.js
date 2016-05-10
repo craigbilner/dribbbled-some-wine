@@ -83,21 +83,23 @@
 
   const isLastCard = cards => indx => indx === (cards.length - 1);
 
-  const swipingOffRight = swipeDir => indx => swipeDir === direction.RIGHT && isFirstCard(indx);
+  const swipingOffRight = ({ swipeDir, activeIndx }) => swipeDir === direction.RIGHT && isFirstCard(activeIndx);
 
-  const swipingOffLeft = cards => swipeDir => indx => swipeDir === direction.LEFT && isLastCard(cards)(indx);
+  const swipingOffLeft = ({ swipeDir, activeIndx, wines }) => swipeDir === direction.LEFT && isLastCard(wines)(activeIndx);
 
-  const canSwipe = model => {
-    if (ifThen(
-        swipingOffRight(model.swipeDir),
-        identity(true),
-        swipingOffLeft(model.wines)(model.swipeDir)
-      )(model.activeIndx)) return false;
+  const isSwipingOff = ifThen(
+    swipingOffRight,
+    identity(true),
+    swipingOffLeft
+  );
 
-    const pcntOffset = Math.abs(model.deltaX) / model.width * 100;
+  const pcntOffset = ({ deltaX, width }) => Math.abs(deltaX) / width * 100;
 
-    return pcntOffset > 40;
-  };
+  const outside40 = pcntOffset => pcntOffset > 40;
+
+  const isOutsideTolerance = compose(pcntOffset, outside40);
+
+  const canSwipe = ifThen(isSwipingOff, identity(false), isOutsideTolerance);
 
   const calculateOffset = (shouldSwipeAway, offset, width, swipeDir) => {
     let total = offset;
