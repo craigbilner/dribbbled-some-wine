@@ -3,6 +3,8 @@
 
   const always = x => () => x;
 
+  const prop = key => obj => obj[key];
+
   const add = a => b => a + b;
 
   const subtract = a => b => a - b;
@@ -11,9 +13,13 @@
 
   const reduce = func => init => data => data.reduce(func, init);
 
+  const sum = reduce((a, b) => add(a)(b))(0);
+
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
 
-  const ifThen = (condition, truthey, falsey) => x => condition(x) ? truthey(x) : falsey(x);
+  const ifElse = (condition, truthey, falsey) => x => condition(x) ? truthey(x) : falsey(x);
+
+  const apply = x => func => func(x);
 
   const freezeIt = Object.freeze;
 
@@ -79,7 +85,7 @@
     });
   };
 
-  const crementIndx = swipeDir => _ => ifThen(always(swipeDir === direction.LEFT), always(1), always(-1))(_);
+  const crementIndx = ({ swipeDir }) => swipeDir === direction.LEFT ? 1 : -1;
 
   const isFirstCard = indx => indx === 0;
 
@@ -89,7 +95,7 @@
 
   const swipingOffLeft = ({ swipeDir, activeIndx, wines }) => swipeDir === direction.LEFT && isLastCard(wines)(activeIndx);
 
-  const isSwipingOff = ifThen(
+  const isSwipingOff = ifElse(
     swipingOffRight,
     always(true),
     swipingOffLeft
@@ -101,7 +107,7 @@
 
   const isOutsideTolerance = compose(pcntOffset, outside40);
 
-  const canSwipe = ifThen(isSwipingOff, always(false), isOutsideTolerance);
+  const canSwipe = ifElse(isSwipingOff, always(false), isOutsideTolerance);
 
   const hasSweptLeft = shouldSwipeAway => ({ swipeDir }) => shouldSwipeAway && swipeDir === direction.LEFT;
 
@@ -109,18 +115,23 @@
 
   const subtractFromOffset = ({ offset }) => subtract(offset);
 
-  const viewportWidth = ({ width }) => width;
+  const viewportWidth = prop('width');
 
   const currentOffset = ({ offset }) => always(offset);
 
-  const determineOffset = shouldSwipeAway => ifThen(always(shouldSwipeAway), subtractFromOffset, currentOffset);
+  const determineOffset = shouldSwipeAway => ifElse(always(shouldSwipeAway), subtractFromOffset, currentOffset);
 
-  const calculateOffset = shouldSwipeAway => ifThen(hasSweptLeft(shouldSwipeAway), addToOffset, determineOffset(shouldSwipeAway));
+  const calculateOffset = shouldSwipeAway => ifElse(hasSweptLeft(shouldSwipeAway), addToOffset, determineOffset(shouldSwipeAway));
+
+  const indxChange = shouldSwipeAway => ifElse(always(shouldSwipeAway), crementIndx, always(0));
+
+  const applyMap = compose(apply, map);
+
+  const applyMapAndSum = model => compose(applyMap(model), sum);
 
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
-    const indxChange = ifThen(always(shouldSwipeAway), crementIndx(model.swipeDir), always(0));
-    const activeIndx = add(indxChange())(model.activeIndx);
+    const activeIndx = applyMapAndSum(model)([indxChange(shouldSwipeAway), prop('activeIndx')]);
 
     return updateModel({
       model,
