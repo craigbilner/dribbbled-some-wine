@@ -27,7 +27,11 @@
 
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
 
+  const composeWrap = wrapper => (...funcs) => data => reduce((val, func) => wrapper(func)(val))(data)(funcs);
+
   const applyMap = compose(apply, map);
+
+  const always2 = compose(always, always);
 
   const compose2 = (h, ...tail) => a => applyTo(compose)([h(a), ...tail]);
 
@@ -151,7 +155,7 @@
 
   const calculateOffset = ifElse2(hasSweptLeft, always(addToOffset), determineOffset);
 
-  const indxChange = ifElse2(always, always(crementIndx), always(always(0)));
+  const indxChange = ifElse2(always, always(crementIndx), always2(0));
 
   const offsetArgs = compose(calculateOffset, argToArray2(viewportWidth));
 
@@ -241,7 +245,7 @@
     el.className = 'wine';
     el.style = 'background-color: rgba(238, 123, 111, 1);';
 
-    compose(map(createCard), map(positionCard(activeIndx)), map(appendChild(el)))(wines);
+    composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines);
   };
 
   const calcStyle = (offset, shouldTransition) => initOffset => {
