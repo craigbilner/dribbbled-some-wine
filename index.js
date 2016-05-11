@@ -15,7 +15,9 @@
 
   const sum = reduce((a, b) => add(a)(b))(0);
 
-  const ifElse = (condition, truthey, falsey) => x => condition(x) ? truthey(x) : falsey(x);
+  const ifElse = (condition, truthey, falsey) => a => condition(a) ? truthey(a) : falsey(a);
+
+  const ifElse2 = (condition, truthey, falsey) => a => b => condition(a)(b) ? truthey(a)(b) : falsey(a)(b);
 
   const apply = x => func => func(x);
 
@@ -26,6 +28,8 @@
   const applyMap = compose(apply, map);
 
   const compose2 = (h, ...tail) => a => applyTo(compose)([h(a), ...tail]);
+
+  const alwaysProp = compose2(prop, always);
 
   const applyToCompose = args => x => applyTo(compose)(args)(x);
 
@@ -127,17 +131,17 @@
 
   const subtractFromOffset = ({ offset }) => subtract(offset);
 
-  const viewportWidth = ({ width }) => always(width);
+  const viewportWidth = alwaysProp('width');
 
-  const currentOffset = ({ offset }) => always(offset);
+  const currentOffset = alwaysProp('offset');
 
-  const determineOffset = shouldSwipeAway => ifElse(always(shouldSwipeAway), subtractFromOffset, currentOffset);
+  const determineOffset = ifElse2(always, always(subtractFromOffset), always(currentOffset));
 
-  const calculateOffset = shouldSwipeAway => ifElse(hasSweptLeft(shouldSwipeAway), addToOffset, determineOffset(shouldSwipeAway));
+  const calculateOffset = ifElse2(hasSweptLeft, always(addToOffset), determineOffset);
 
-  const indxChange = shouldSwipeAway => ifElse(always(shouldSwipeAway), crementIndx, always(0));
+  const indxChange = ifElse2(always, always(crementIndx), always(always(0)));
 
-  const applyMapAndSum = model => compose(applyMap(model), sum);
+  const applyMapAndSum = compose2(applyMap, sum);
 
   const transformOffsets = shouldSwipeAway => flipApplyMap([viewportWidth, calculateOffset(shouldSwipeAway)]);
 
