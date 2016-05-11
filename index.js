@@ -5,6 +5,8 @@
 
   const prop = key => obj => obj[key];
 
+  const and = a => b => a && b;
+
   const add = a => b => a + b;
 
   const subtract = a => b => a - b;
@@ -33,9 +35,15 @@
 
   const applyToCompose = args => x => applyTo(compose)(args)(x);
 
+  const applyMapAndSum = compose2(applyMap, sum);
+
   const flip = func => a => b => func(b)(a);
 
   const flipApplyMap = flip(applyMap);
+
+  const transformAndCompose = compose2(flip(applyMap), applyToCompose);
+
+  const argToArray2 = a => b => [a, b];
 
   const freezeIt = Object.freeze;
 
@@ -125,11 +133,15 @@
 
   const canSwipe = ifElse(isSwipingOff, always(false), isOutsideTolerance);
 
-  const hasSweptLeft = shouldSwipeAway => ({ swipeDir }) => shouldSwipeAway && swipeDir === direction.LEFT;
+  const isLeft = dir => dir === direction.LEFT;
 
-  const addToOffset = ({ offset }) => add(offset);
+  const modelIsLeft = compose(prop('swipeDir'), isLeft);
 
-  const subtractFromOffset = ({ offset }) => subtract(offset);
+  const hasSweptLeft = transformAndCompose([always(modelIsLeft), and]);
+
+  const addToOffset = compose(prop('offset'), add);
+
+  const subtractFromOffset = compose(prop('offset'), subtract);
 
   const viewportWidth = alwaysProp('width');
 
@@ -141,16 +153,18 @@
 
   const indxChange = ifElse2(always, always(crementIndx), always(always(0)));
 
-  const applyMapAndSum = compose2(applyMap, sum);
+  const offsetArgs = compose(calculateOffset, argToArray2(viewportWidth));
 
-  const transformOffsets = shouldSwipeAway => flipApplyMap([viewportWidth, calculateOffset(shouldSwipeAway)]);
+  const transformOffsets = flip(compose2(compose(offsetArgs, always), flipApplyMap));
 
-  const getOffset = compose2(transformOffsets, applyToCompose);
+  const composeOffset = compose2(transformOffsets(), applyToCompose);
+
+  const getOffset = ssa => model => composeOffset(ssa)(model)();
 
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
     const activeIndx = applyMapAndSum(model)([indxChange(shouldSwipeAway), prop('activeIndx')]);
-    const offset = getOffset(shouldSwipeAway)(model)();
+    const offset = getOffset(shouldSwipeAway)(model);
 
     return updateModel({
       model,
