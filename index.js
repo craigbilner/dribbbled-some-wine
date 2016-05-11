@@ -15,11 +15,23 @@
 
   const sum = reduce((a, b) => add(a)(b))(0);
 
-  const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
-
   const ifElse = (condition, truthey, falsey) => x => condition(x) ? truthey(x) : falsey(x);
 
   const apply = x => func => func(x);
+
+  const applyTo = func => args => func.apply(null, [...args]);
+
+  const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
+
+  const applyMap = compose(apply, map);
+
+  const compose2 = (h, ...tail) => a => applyTo(compose)([h(a), ...tail]);
+
+  const applyToCompose = args => x => applyTo(compose)(args)(x);
+
+  const flip = func => a => b => func(b)(a);
+
+  const flipApplyMap = flip(applyMap);
 
   const freezeIt = Object.freeze;
 
@@ -115,7 +127,7 @@
 
   const subtractFromOffset = ({ offset }) => subtract(offset);
 
-  const viewportWidth = prop('width');
+  const viewportWidth = ({ width }) => always(width);
 
   const currentOffset = ({ offset }) => always(offset);
 
@@ -125,19 +137,22 @@
 
   const indxChange = shouldSwipeAway => ifElse(always(shouldSwipeAway), crementIndx, always(0));
 
-  const applyMap = compose(apply, map);
-
   const applyMapAndSum = model => compose(applyMap(model), sum);
+
+  const transformOffsets = shouldSwipeAway => flipApplyMap([viewportWidth, calculateOffset(shouldSwipeAway)]);
+
+  const getOffset = compose2(transformOffsets, applyToCompose);
 
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
     const activeIndx = applyMapAndSum(model)([indxChange(shouldSwipeAway), prop('activeIndx')]);
+    const offset = getOffset(shouldSwipeAway)(model)();
 
     return updateModel({
       model,
       obj: {
         deltaX: 0,
-        offset: calculateOffset(shouldSwipeAway)(model)(viewportWidth(model)),
+        offset,
         shouldSwipeAway,
         shouldTransition: true,
         activeIndx,
