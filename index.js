@@ -71,6 +71,21 @@
     NEITHER: 'NEITHER',
   };
 
+  const colours = {
+    0: {
+      r: 238,
+      g: 123,
+      b: 111,
+      a: 1
+    },
+    1: {
+      r: 250,
+      g: 202,
+      b: 138,
+      a: 1,
+    },
+  };
+
   const model = createModel({
     wines: [],
     startX: 0,
@@ -274,24 +289,33 @@
     }
   };
 
-  const colourDiff = (width, deltaX) => (start, end) => start + Math.round(((deltaX / width) * (end - start)));
+  const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
 
-  const calcColour = ({ width, deltaX, shouldTransition, activeIndx }) => {
-    if (shouldTransition) {
-      if (activeIndx === 1) {
-        return 'background-color: rgba(250, 202, 138, 1);';
-      } else {
-        return 'background-color: rgba(238, 123, 111, 1);';
-      }
-    }
+  const colourDiff = (width, deltaX) => (start, end) => {
+    return start + Math.round((Math.abs(deltaX / width) * (end - start)));
+  };
 
+  const backgroundColour = (width, deltaX) => (s, f) => {
     const diff = colourDiff(width, deltaX);
-    const r = diff(238, 250);
-    const g = diff(123, 202);
-    const b = diff(111, 138);
+    const r = diff(s.r, f.r);
+    const g = diff(s.g, f.g);
+    const b = diff(s.b, f.b);
     const a = 1;
 
-    return `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
+    return colourObjToString({ r, g, b, a });
+  };
+
+  const calcColour = ({ width, deltaX, shouldTransition, activeIndx, swipeDir, wines }) => {
+    if (shouldTransition || swipeDir === direction.NEITHER) {
+      return colourObjToString(colours[activeIndx]);
+    } else {
+      const bgc = backgroundColour(width, deltaX);
+      if (swipeDir === direction.LEFT) {
+        return bgc(colours[activeIndx], colours[Math.min(activeIndx + 1, wines.length - 1)]);
+      } else if (swipeDir === direction.RIGHT) {
+        return bgc(colours[activeIndx], colours[Math.max(activeIndx - 1, 0)]);
+      }
+    }
   };
 
   const updateView = el => model => {
@@ -331,7 +355,7 @@
 
     view(el, newModel, params => {
       newModel = update(newModel)(params);
-      //console.log(newModel);
+
       requestAnimationFrame(() => updateView(el)(newModel));
     });
   };
