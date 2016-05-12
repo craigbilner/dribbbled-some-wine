@@ -1,6 +1,8 @@
 {
   // utils
 
+  const identity = x => x;
+
   const always = x => () => x;
 
   const prop = key => obj => obj[key];
@@ -47,7 +49,13 @@
 
   const transformAndCompose = compose2(flip(applyMap), applyToCompose);
 
-  const argToArray2 = a => b => [a, b];
+  const pairs = a => b => [a, b];
+
+  const applyToFunc = b => func => func(b);
+
+  const composeArr2 = a => b => compose(a, b);
+
+  const pipe = (a, b) => compose(a, composeArr2(b));
 
   const freezeIt = Object.freeze;
 
@@ -107,13 +115,21 @@
 
   const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
 
-  const colourDiff = (width, deltaX) => (start, end) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
+  const colourDiff = (width, deltaX) => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
+
+  const propToPairs = compose(applyMap, pairs(pipe(compose(applyToFunc, pairs), applyToFunc)));
+
+  const colourPair = compose(compose(prop, propToPairs), applyTo(compose2));
 
   const backgroundColour = (width, deltaX, s) => f => {
     const diff = colourDiff(width, deltaX);
-    const r = diff(s.r, f.r);
-    const g = diff(s.g, f.g);
-    const b = diff(s.b, f.b);
+    const diffR = colourPair('r');
+    const diffG = colourPair('g');
+    const diffB = colourPair('b');
+
+    const r = diff(diffR(s)(f));
+    const g = diff(diffG(s)(f));
+    const b = diff(diffB(s)(f));
     const a = 1;
 
     return colourObjToString({ r, g, b, a });
@@ -172,7 +188,7 @@
 
   const indxChange = ifElse2(always, always(crementIndx), always2(0));
 
-  const offsetArgs = compose(calculateOffset, argToArray2(viewportWidth));
+  const offsetArgs = compose(calculateOffset, pairs(viewportWidth));
 
   const transformOffsets = flip(compose2(compose(offsetArgs, always), flipApplyMap));
 
