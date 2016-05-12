@@ -105,27 +105,29 @@
     TOUCH_END: 'TOUCH_END',
   };
 
-  const handleTouchStart = (model, { x }) => {
-    return updateModel({
-      model,
-      obj: {
-        startX: x,
-        shouldTransition: false,
-        shouldSwipeAway: false,
-      }
-    });
+  const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
+
+  const colourDiff = (width, deltaX) => (start, end) => {
+    return start + Math.round((Math.abs(deltaX / width) * (end - start)));
   };
 
-  const handleTouchMove = (model, { x }) => {
-    const deltaX = model.startX - x;
+  const backgroundColour = (width, deltaX) => (s, f) => {
+    const diff = colourDiff(width, deltaX);
+    const r = diff(s.r, f.r);
+    const g = diff(s.g, f.g);
+    const b = diff(s.b, f.b);
+    const a = 1;
 
-    return updateModel({
-      model,
-      obj: {
-        deltaX,
-        swipeDir: deltaX > 0 ? direction.LEFT : direction.RIGHT,
-      }
-    });
+    return colourObjToString({ r, g, b, a });
+  };
+
+  const calcColour = ({ width, activeIndx, wines }) => (deltaX, swipeDir) => {
+    const bgc = backgroundColour(width, deltaX);
+    if (swipeDir === direction.LEFT) {
+      return bgc(colours[activeIndx], colours[Math.min(activeIndx + 1, wines.length - 1)]);
+    } else if (swipeDir === direction.RIGHT) {
+      return bgc(colours[activeIndx], colours[Math.max(activeIndx - 1, 0)]);
+    }
   };
 
   const crementIndx = ({ swipeDir }) => swipeDir === direction.LEFT ? 1 : -1;
@@ -180,6 +182,33 @@
 
   const getOffset = ssa => model => composeOffset(ssa)(model)();
 
+  const handleTouchStart = (model, { x }) => {
+    return updateModel({
+      model,
+      obj: {
+        startX: x,
+        shouldTransition: false,
+        shouldSwipeAway: false,
+        bgColour: colourObjToString(colours[model.activeIndx]),
+      }
+    });
+  };
+
+  const handleTouchMove = (model, { x }) => {
+    const deltaX = model.startX - x;
+    const swipeDir = deltaX > 0 ? direction.LEFT : direction.RIGHT;
+    const colour = calcColour(model);
+
+    return updateModel({
+      model,
+      obj: {
+        deltaX,
+        swipeDir,
+        bgColour: colour(deltaX, swipeDir),
+      }
+    });
+  };
+
   const handleTouchEnd = model => {
     const shouldSwipeAway = canSwipe(model);
     const activeIndx = applyMapAndSum(model)([indxChange(shouldSwipeAway), prop('activeIndx')]);
@@ -193,7 +222,8 @@
         shouldSwipeAway,
         shouldTransition: true,
         activeIndx,
-        swipeDir: direction.NEITHER
+        swipeDir: direction.NEITHER,
+        bgColour: colourObjToString(colours[activeIndx]),
       }
     });
   };
@@ -289,37 +319,8 @@
     }
   };
 
-  const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
-
-  const colourDiff = (width, deltaX) => (start, end) => {
-    return start + Math.round((Math.abs(deltaX / width) * (end - start)));
-  };
-
-  const backgroundColour = (width, deltaX) => (s, f) => {
-    const diff = colourDiff(width, deltaX);
-    const r = diff(s.r, f.r);
-    const g = diff(s.g, f.g);
-    const b = diff(s.b, f.b);
-    const a = 1;
-
-    return colourObjToString({ r, g, b, a });
-  };
-
-  const calcColour = ({ width, deltaX, shouldTransition, activeIndx, swipeDir, wines }) => {
-    if (shouldTransition || swipeDir === direction.NEITHER) {
-      return colourObjToString(colours[activeIndx]);
-    } else {
-      const bgc = backgroundColour(width, deltaX);
-      if (swipeDir === direction.LEFT) {
-        return bgc(colours[activeIndx], colours[Math.min(activeIndx + 1, wines.length - 1)]);
-      } else if (swipeDir === direction.RIGHT) {
-        return bgc(colours[activeIndx], colours[Math.max(activeIndx - 1, 0)]);
-      }
-    }
-  };
-
   const updateView = el => model => {
-    el.style = calcColour(model);
+    el.style = model.bgColour;
 
     return map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
   };
