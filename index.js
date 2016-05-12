@@ -107,11 +107,9 @@
 
   const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
 
-  const colourDiff = (width, deltaX) => (start, end) => {
-    return start + Math.round((Math.abs(deltaX / width) * (end - start)));
-  };
+  const colourDiff = (width, deltaX) => (start, end) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
 
-  const backgroundColour = (width, deltaX) => (s, f) => {
+  const backgroundColour = (width, deltaX, s) => f => {
     const diff = colourDiff(width, deltaX);
     const r = diff(s.r, f.r);
     const g = diff(s.g, f.g);
@@ -122,11 +120,11 @@
   };
 
   const calcColour = ({ width, activeIndx, wines }) => (deltaX, swipeDir) => {
-    const bgc = backgroundColour(width, deltaX);
+    const bgc = backgroundColour(width, deltaX, colours[activeIndx]);
     if (swipeDir === direction.LEFT) {
-      return bgc(colours[activeIndx], colours[Math.min(activeIndx + 1, wines.length - 1)]);
+      return bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
     } else if (swipeDir === direction.RIGHT) {
-      return bgc(colours[activeIndx], colours[Math.max(activeIndx - 1, 0)]);
+      return bgc(colours[Math.max(activeIndx - 1, 0)]);
     }
   };
 
