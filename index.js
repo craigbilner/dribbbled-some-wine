@@ -248,8 +248,8 @@
     composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines);
   };
 
-  const calcStyle = (offset, shouldTransition) => initOffset => {
-    let style = `transform: translate(calc(${initOffset} - ${offset}px), 15vh);`;
+  const calcStyle = (deltaX, offset, shouldTransition) => initOffset => {
+    let style = `transform: translate(calc(${initOffset} - ${deltaX + offset}px), 15vh);`;
 
     if (shouldTransition) {
       style += ' transition: transform 100ms ease-out;';
@@ -259,7 +259,7 @@
   };
 
   const updateCard = model => (el, indx) => {
-    const styleCalc = calcStyle(model.deltaX + model.offset, model.shouldTransition);
+    const styleCalc = calcStyle(model.deltaX, model.offset, model.shouldTransition);
 
     el.style = styleCalc(`${7.5 + (indx * 100)}vw`);
 
@@ -274,7 +274,31 @@
     }
   };
 
-  const updateView = el => model => map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
+  const colourDiff = (width, deltaX) => (start, end) => start + Math.round(((deltaX / width) * (end - start)));
+
+  const calcColour = ({ width, deltaX, shouldTransition, activeIndx }) => {
+    if (shouldTransition) {
+      if (activeIndx === 1) {
+        return 'background-color: rgba(250, 202, 138, 1);';
+      } else {
+        return 'background-color: rgba(238, 123, 111, 1);';
+      }
+    }
+
+    const diff = colourDiff(width, deltaX);
+    const r = diff(238, 250);
+    const g = diff(123, 202);
+    const b = diff(111, 138);
+    const a = 1;
+
+    return `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
+  };
+
+  const updateView = el => model => {
+    el.style = calcColour(model);
+
+    return map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
+  };
 
   // app
 
