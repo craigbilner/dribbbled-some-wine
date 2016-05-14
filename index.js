@@ -51,11 +51,13 @@
 
   const pairs = a => b => [a, b];
 
-  const applyToFunc = b => func => func(b);
+  const propMap = compose(prop, map);
 
-  const composeArr2 = a => b => compose(a, b);
+  const propMapPair = pairs(propMap);
 
-  const pipe = (a, b) => compose(a, composeArr2(b));
+  const applyToCompose2 = applyTo(compose2);
+
+  const flipPropMapPair = compose(compose(propMapPair, applyToCompose2), flip);
 
   const freezeIt = Object.freeze;
 
@@ -115,22 +117,18 @@
 
   const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
 
-  const colourDiff = (width, deltaX) => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
+  const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
 
-  const propToPairs = compose(applyMap, pairs(pipe(compose(applyToFunc, pairs), applyToFunc)));
+  const extractPairs = compose2(colourDiff, flipPropMapPair);
 
-  const colourPair = compose(compose(prop, propToPairs), applyTo(compose2));
+  const composeColours = compose2(extractPairs, compose(pairs(pairs), applyTo(compose2)));
 
   const backgroundColour = (width, deltaX, s) => f => {
-    const diff = colourDiff(width, deltaX);
-    const diffR = colourPair('r');
-    const diffG = colourPair('g');
-    const diffB = colourPair('b');
-
-    const r = diff(diffR(s)(f));
-    const g = diff(diffG(s)(f));
-    const b = diff(diffB(s)(f));
-    const a = 1;
+    const colourCalc = composeColours(width)(deltaX)(s)(f);
+    const r = colourCalc('r');
+    const g = colourCalc('g');
+    const b = colourCalc('b');
+    const a = f.a;
 
     return colourObjToString({ r, g, b, a });
   };
