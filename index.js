@@ -37,6 +37,10 @@
 
   const compose2 = (h, ...tail) => a => applyTo(compose)([h(a), ...tail]);
 
+  const compose3 = (h, ...tail) => a => b => applyTo(compose)([h(a)(b), ...tail]);
+
+  const compose4 = (h, ...tail) => a => b => c => applyTo(compose)([h(a)(b)(c), ...tail]);
+
   const alwaysProp = compose2(prop, always);
 
   const applyToCompose = args => x => applyTo(compose)(args)(x);
@@ -115,7 +119,9 @@
     TOUCH_END: 'TOUCH_END',
   };
 
-  const colourObjToString = ({ r, g, b, a }) => `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
+  const colourObjToArray = ({ r, g, b }) => [r, g, b];
+
+  const colourObjToString = (r, g, b) => `background-color: rgba(${r}, ${g}, ${b}, 1);`;
 
   const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
 
@@ -123,18 +129,14 @@
 
   const composeColours = compose2(extractPairs, compose(pairs(pairs), applyTo(compose2)));
 
-  const backgroundColour = (width, deltaX, s) => f => {
-    const colourCalc = composeColours(width)(deltaX)(s)(f);
-    const r = colourCalc('r');
-    const g = colourCalc('g');
-    const b = colourCalc('b');
-    const a = f.a;
+  const toArr = a => [a];
 
-    return colourObjToString({ r, g, b, a });
-  };
+  const calcColours = compose2(compose(toArr, applyTo(map)), applyTo(colourObjToString));
+
+  const backgroundColour = compose4(composeColours, flip(calcColours)(['r', 'g', 'b']));
 
   const calcColour = ({ width, activeIndx, wines }) => (deltaX, swipeDir) => {
-    const bgc = backgroundColour(width, deltaX, colours[activeIndx]);
+    const bgc = backgroundColour(width)(deltaX)(colours[activeIndx]);
     if (swipeDir === direction.LEFT) {
       return bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
     } else if (swipeDir === direction.RIGHT) {
@@ -201,7 +203,7 @@
         startX: x,
         shouldTransition: false,
         shouldSwipeAway: false,
-        bgColour: colourObjToString(colours[model.activeIndx]),
+        bgColour: applyTo(colourObjToString)(colourObjToArray(colours[model.activeIndx])),
       }
     });
   };
@@ -235,7 +237,7 @@
         shouldTransition: true,
         activeIndx,
         swipeDir: direction.NEITHER,
-        bgColour: colourObjToString(colours[activeIndx]),
+        bgColour: applyTo(colourObjToString)(colourObjToArray(colours[activeIndx])),
       }
     });
   };
