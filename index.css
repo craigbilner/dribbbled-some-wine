@@ -39,9 +39,14 @@
 .wine_bottle {
     position: absolute;
     top: 10vh;
-    transform: rotate(90deg);
+    transform: rotate(90deg) translateY(12vw);
+    transition: transform 100ms ease-in 25ms;
     height: 60vw;
     left: 32vw;
+}
+
+.wine_card--active .wine_bottle {
+    transform: rotate(90deg) translateY(0);
 }
 
 .wine_bottle-shadow {
@@ -56,7 +61,7 @@
 
 .wine_price {
     position: absolute;
-    left: calc(50% - 3rem);
+    left: calc(50% - 3.5rem);
     top: 60%;
     font-size: 1.5rem;
     color: rgb(154, 154, 154);
@@ -88,8 +93,4 @@
 .card_1 .wine_button {
     border-color: rgba(250, 202, 138, 1);
     color: rgba(250, 202, 138, 1);
-}
-
-.wine_card--active {
-
 }
