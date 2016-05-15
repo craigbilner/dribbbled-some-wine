@@ -1,6 +1,7 @@
 * {
     padding: 0;
     margin: 0;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .wine {
@@ -17,14 +18,58 @@
     border-radius: 1rem;
 }
 
+.wine_title {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 5vh;
+    text-transform: uppercase;
+}
+
+.wine_title_main {
+    font-size: 1.5rem;
+}
+
+.wine_title_sub {
+    margin-top: 1rem;
+    color: rgb(193, 193, 193);
+    font-size: 0.75rem;
+}
+
+.wine_bottle {
+    position: absolute;
+    top: 10vh;
+    transform: rotate(90deg);
+    height: 60vw;
+    left: 32vw;
+}
+
+.wine_price {
+    position: absolute;
+    left: calc(50% - 3rem);
+    top: 60%;
+    font-size: 1.5rem;
+    color: rgb(154, 154, 154);
+}
+
+.wine_separator {
+    position: absolute;
+    width: 50vw;
+    top: 56vh;
+    border-top: 1px solid #c1c1c1;
+    left: calc(50% - 25vw);
+}
+
+.wine_button {
+    position: absolute;
+    top: 85%;
+    left: calc(50% - 4.5rem);
+    font-size: 1.25rem;
+    border: 1px solid;
+    padding: 0.5rem 1.5rem;
+    border-radius: 1rem;
+}
+
 .wine_card--active {
-    
-}
 
-.colour_1 {
-    background-color: rgba(238, 123, 111, 1);
-}
-
-.colour_2 {
-    background-color: rgba(250, 202, 138, 1)
 }

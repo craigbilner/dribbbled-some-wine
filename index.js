@@ -316,10 +316,30 @@
 
   // view
 
+  const template = ({ name, fullName, price, imgSrc }) => `
+    <div class="wine_title">
+      <div class="wine_title_main">
+        ${name}
+      </div>
+      <div class="wine_title_sub">
+        ${fullName}
+      </div>
+    </div>
+    <img class="wine_bottle" src="${imgSrc}">
+    <div class="wine_price">
+      $ ${price}.00
+    </div>
+    <div class="wine_separator"></div>
+    <div class="wine_button">
+      BUY NOW
+    </div>
+  `;
+
   const createCard = wine => {
     const card = document.createElement('div');
     card.className = 'wine_card';
     card.textContent = wine.name;
+    card.innerHTML = template(wine);
 
     return card;
   };
@@ -418,11 +438,13 @@
     {
       name: 'Barolo',
       fullName: 'Barolo di castiglione falletto',
+      imgSrc: 'barolo.png',
       price: 550,
     },
     {
       name: 'Moscato',
       fullName: 'Moscato d\'asti',
+      imgSrc: 'moscato.png',
       price: 550,
       desc: 'Moscato tends to be a popular white wine among wine lovers and enjoys a significant following with ' +
       'seasoned wine enthusiasts who enjoy a lighter-styled wine',
