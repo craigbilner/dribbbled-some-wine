@@ -197,23 +197,22 @@
 
   const backgroundColour = compose4(composeColours, flip(calcColours)(['r', 'g', 'b']));
 
-  const a = bgc => activeIndx => wines => bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
+  const swipeLeftColours = bgc => activeIndx => wines => bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
 
-  const b = bgc => activeIndx => wines => bgc(colours[Math.max(activeIndx - 1, 0)]);
+  const swipeRightColours = bgc => activeIndx => wines => bgc(colours[Math.max(activeIndx - 1, 0)]);
 
-  const d = compose3(b, always, compose(pairs(isRight), applyTo(ifElse)));
+  const swipeRightCheck = compose3(swipeRightColours, always, compose(pairs(isRight), applyTo(ifElse)));
 
-  const e = compose3(a, always, ifElseCurry(isLeft));
+  const swipeLeftCheck = compose3(swipeLeftColours, always, ifElseCurry(isLeft));
 
-  const f = (a, b) => compose(a)(b);
+  const argsPipeToCompose = (a, b) => compose(a)(b);
 
-  const g = compose2(pairs, applyTo(compose));
+  const applyToComposePair = compose2(pairs, applyTo(compose));
 
-  const h = compose3(applyMap3, flip(g)(applyTo(f)));
+  const mapComposePipe3 = compose3(applyMap3, flip(applyToComposePair)(applyTo(argsPipeToCompose)));
 
-  const i = a => b => c => d => e => a(c)(d)(e)(b);
-
-  const calcColour = i(h)([e, d]);
+  const calcColour = width => deltaX => activeIndx => wines =>
+    compose3(backgroundColour, mapComposePipe3)(width)(deltaX)(colours[activeIndx])(activeIndx)(wines)([swipeLeftCheck, swipeRightCheck]);
 
   const handleTouchStart = (model, { x }) => {
     return updateModel({
@@ -230,8 +229,7 @@
   const handleTouchMove = (model, { x }) => {
     const deltaX = model.startX - x;
     const swipeDir = deltaX > 0 ? direction.LEFT : direction.RIGHT;
-    const bgc = backgroundColour(model.width)(deltaX)(colours[model.activeIndx]);
-    const bgColour = calcColour(bgc)(model.activeIndx)(model.wines)(swipeDir);
+    const bgColour = calcColour(model.width)(deltaX)(model.activeIndx)(model.wines)(swipeDir);
 
     return updateModel({
       model,
