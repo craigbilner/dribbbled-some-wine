@@ -7,9 +7,13 @@
 
   const prop = key => obj => obj[key];
 
+  const eq = a => b => a === b;
+
   const and = a => b => a && b;
 
   const add = a => b => a + b;
+
+  const mult = a => b => a * b;
 
   const subtract = a => b => a - b;
 
@@ -232,6 +236,8 @@
   const calcColour = width => deltaX => activeIndx => wines =>
     compose3(backgroundColour, mapComposePipe3)(width)(deltaX)(colours[activeIndx])(activeIndx)(wines)([swipeLeftCheck, swipeRightCheck]);
 
+  const colourArrayToString = compose(colourObjToArray, applyTo(colourObjToString));
+
   const handleTouchStart = (model, { x }) => {
     return updateModel({
       model,
@@ -239,7 +245,7 @@
         startX: x,
         shouldTransition: false,
         shouldSwipeAway: false,
-        bgColour: applyTo(colourObjToString)(colourObjToArray(colours[model.activeIndx])),
+        bgColour: colourArrayToString(colours[model.activeIndx]),
       }
     });
   };
@@ -273,7 +279,7 @@
         shouldTransition: true,
         activeIndx,
         swipeDir: direction.NEITHER,
-        bgColour: applyTo(colourObjToString)(colourObjToArray(colours[activeIndx])),
+        bgColour: colourArrayToString(colours[activeIndx]),
       }
     });
   };
@@ -306,15 +312,23 @@
 
   const cardTransform = offset => `transform: translate(${offset}vw, 15vh)`;
 
-  const positionCard = activeIndx => (el, indx) => {
-    if (activeIndx === indx) {
-      el.classList.add('wine_card--active');
-    }
-
-    el.style = cardTransform(7.5 + (100 * indx));
+  const addClass = el => elClass => {
+    el.classList.add(elClass);
 
     return el;
   };
+
+  const addStyle = el => elStyle => {
+    el.style = elStyle;
+
+    return el;
+  };
+
+  const a = compose(mult(100), add(7.5), compose(cardTransform, flip(addStyle)));
+
+  const b = activeIndx => indx => ifElse(always(eq(activeIndx)(indx)), flip(addClass)('wine_card--active'), identity);
+
+  const positionCard = activeIndx => (el, indx) => compose(a(indx), b(activeIndx)(indx))(el);
 
   const eventListener = update => action => ({ target, touches }) => {
     if (hasClass('wine_card')(target)) {
