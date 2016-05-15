@@ -23,9 +23,15 @@
 
   const ifElse2 = (condition, truthey, falsey) => a => b => condition(a)(b) ? truthey(a)(b) : falsey(a)(b);
 
+  const ifElseCurry = condition => truthey => falsey => a => condition(a) ? truthey(a) : falsey(a);
+
   const apply = x => func => func(x);
 
+  const apply3 = x => y => z => func => func(x)(y)(z);
+
   const applyTo = func => args => func.apply(null, [...args]);
+
+  const applyToUnit = func => a => func.apply(null, [a]);
 
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
 
@@ -40,6 +46,8 @@
   const compose3 = (h, ...tail) => a => b => applyTo(compose)([h(a)(b), ...tail]);
 
   const compose4 = (h, ...tail) => a => b => c => applyTo(compose)([h(a)(b)(c), ...tail]);
+
+  const applyMap3 = compose3(apply3, map);
 
   const alwaysProp = compose2(prop, always);
 
@@ -119,31 +127,6 @@
     TOUCH_END: 'TOUCH_END',
   };
 
-  const colourObjToArray = ({ r, g, b }) => [r, g, b];
-
-  const colourObjToString = (r, g, b) => `background-color: rgba(${r}, ${g}, ${b}, 1);`;
-
-  const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
-
-  const extractPairs = compose2(colourDiff, flipPropMapPair);
-
-  const composeColours = compose2(extractPairs, compose(pairs(pairs), applyTo(compose2)));
-
-  const toArr = a => [a];
-
-  const calcColours = compose2(compose(toArr, applyTo(map)), applyTo(colourObjToString));
-
-  const backgroundColour = compose4(composeColours, flip(calcColours)(['r', 'g', 'b']));
-
-  const calcColour = ({ width, activeIndx, wines }) => (deltaX, swipeDir) => {
-    const bgc = backgroundColour(width)(deltaX)(colours[activeIndx]);
-    if (swipeDir === direction.LEFT) {
-      return bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
-    } else if (swipeDir === direction.RIGHT) {
-      return bgc(colours[Math.max(activeIndx - 1, 0)]);
-    }
-  };
-
   const crementIndx = ({ swipeDir }) => swipeDir === direction.LEFT ? 1 : -1;
 
   const isFirstCard = indx => indx === 0;
@@ -169,6 +152,8 @@
   const canSwipe = ifElse(isSwipingOff, always(false), isOutsideTolerance);
 
   const isLeft = dir => dir === direction.LEFT;
+
+  const isRight = dir => dir === direction.RIGHT;
 
   const modelIsLeft = compose(prop('swipeDir'), isLeft);
 
@@ -196,6 +181,40 @@
 
   const getOffset = ssa => model => composeOffset(ssa)(model)();
 
+  const colourObjToArray = ({ r, g, b }) => [r, g, b];
+
+  const colourObjToString = (r, g, b) => `background-color: rgba(${r}, ${g}, ${b}, 1);`;
+
+  const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
+
+  const extractPairs = compose2(colourDiff, flipPropMapPair);
+
+  const composeColours = compose2(extractPairs, compose(pairs(pairs), applyTo(compose2)));
+
+  const toArr = a => [a];
+
+  const calcColours = compose2(compose(toArr, applyTo(map)), applyTo(colourObjToString));
+
+  const backgroundColour = compose4(composeColours, flip(calcColours)(['r', 'g', 'b']));
+
+  const a = bgc => activeIndx => wines => bgc(colours[Math.min(activeIndx + 1, wines.length - 1)]);
+
+  const b = bgc => activeIndx => wines => bgc(colours[Math.max(activeIndx - 1, 0)]);
+
+  const d = compose3(b, always, compose(pairs(isRight), applyTo(ifElse)));
+
+  const e = compose3(a, always, ifElseCurry(isLeft));
+
+  const f = (a, b) => compose(a)(b);
+
+  const g = compose2(pairs, applyTo(compose));
+
+  const h = compose3(applyMap3, flip(g)(applyTo(f)));
+
+  const i = a => b => c => d => e => a(c)(d)(e)(b);
+
+  const calcColour = i(h)([e, d]);
+
   const handleTouchStart = (model, { x }) => {
     return updateModel({
       model,
@@ -211,14 +230,15 @@
   const handleTouchMove = (model, { x }) => {
     const deltaX = model.startX - x;
     const swipeDir = deltaX > 0 ? direction.LEFT : direction.RIGHT;
-    const colour = calcColour(model);
+    const bgc = backgroundColour(model.width)(deltaX)(colours[model.activeIndx]);
+    const bgColour = calcColour(bgc)(model.activeIndx)(model.wines)(swipeDir);
 
     return updateModel({
       model,
       obj: {
         deltaX,
         swipeDir,
-        bgColour: colour(deltaX, swipeDir),
+        bgColour,
       }
     });
   };
