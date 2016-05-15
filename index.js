@@ -11,23 +11,35 @@
 
   const and = a => b => a && b;
 
+  const not = a => b => a !== b;
+
+  const isFalse = a => a === false;
+
   const add = a => b => a + b;
 
   const mult = a => b => a * b;
+
+  const toString = a => a.toString();
 
   const subtract = a => b => a - b;
 
   const map = func => data => data.map(func);
 
+  const filter = func => data => data.filter(func);
+
   const reduce = func => init => data => data.reduce(func, init);
 
   const sum = reduce((a, b) => add(a)(b))(0);
 
-  const ifElse = (condition, truthey, falsey) => a => condition(a) ? truthey(a) : falsey(a);
+  const ifElse = (condition, truthey, falsey) => condition ? truthey : falsey;
 
-  const ifElse2 = (condition, truthey, falsey) => a => b => condition(a)(b) ? truthey(a)(b) : falsey(a)(b);
+  const ifElseApply = (condition, truthey, falsey) => a => condition(a) ? truthey(a) : falsey(a);
 
-  const ifElseCurry = condition => truthey => falsey => a => condition(a) ? truthey(a) : falsey(a);
+  const ifElseApply2 = (condition, truthey, falsey) => a => b => condition(a)(b) ? truthey(a)(b) : falsey(a)(b);
+
+  const ifElseApplyCurry = condition => truthey => falsey => a => condition(a) ? truthey(a) : falsey(a);
+
+  const ifElseCurry = condition => truthey => falsey => condition ? truthey : falsey;
 
   const apply = x => func => func(x);
 
@@ -78,6 +90,8 @@
   const freezeIt = Object.freeze;
 
   const appendChild = container => child => container.appendChild(child);
+
+  const concatCurry2 = a => b => a.concat(b);
 
   const hasClass = className => el => [...el.classList].indexOf(className) > -1;
 
@@ -159,7 +173,7 @@
 
   const swipingOffLeft = ({ swipeDir, activeIndx, wines }) => swipeDir === direction.LEFT && isLastCard(wines)(activeIndx);
 
-  const isSwipingOff = ifElse(
+  const isSwipingOff = ifElseApply(
     swipingOffRight,
     always(true),
     swipingOffLeft
@@ -171,7 +185,7 @@
 
   const isOutsideTolerance = compose(pcntOffset, outside40);
 
-  const canSwipe = ifElse(isSwipingOff, always(false), isOutsideTolerance);
+  const canSwipe = ifElseApply(isSwipingOff, always(false), isOutsideTolerance);
 
   const isLeft = dir => dir === direction.LEFT;
 
@@ -189,11 +203,11 @@
 
   const currentOffset = alwaysProp('offset');
 
-  const determineOffset = ifElse2(always, always(subtractFromOffset), always(currentOffset));
+  const determineOffset = ifElseApply2(always, always(subtractFromOffset), always(currentOffset));
 
-  const calculateOffset = ifElse2(hasSweptLeft, always(addToOffset), determineOffset);
+  const calculateOffset = ifElseApply2(hasSweptLeft, always(addToOffset), determineOffset);
 
-  const indxChange = ifElse2(always, always(crementIndx), always2(0));
+  const indxChange = ifElseApply2(always, always(crementIndx), always2(0));
 
   const offsetArgs = compose(calculateOffset, pairs(viewportWidth));
 
@@ -223,9 +237,9 @@
 
   const swipeRightColours = bgc => activeIndx => wines => bgc(colours[Math.max(activeIndx - 1, 0)]);
 
-  const swipeRightCheck = compose3(swipeRightColours, always, compose(pairs(isRight), applyTo(ifElse)));
+  const swipeRightCheck = compose3(swipeRightColours, always, compose(pairs(isRight), applyTo(ifElseApply)));
 
-  const swipeLeftCheck = compose3(swipeLeftColours, always, ifElseCurry(isLeft));
+  const swipeLeftCheck = compose3(swipeLeftColours, always, ifElseApplyCurry(isLeft));
 
   const argsPipeToCompose = (a, b) => compose(a)(b);
 
@@ -312,8 +326,14 @@
 
   const cardTransform = offset => `transform: translate(${offset}vw, 15vh)`;
 
-  const addClass = el => elClass => {
-    el.classList.add(elClass);
+  const addClass = el => className => {
+    el.classList.add(className);
+
+    return el;
+  };
+
+  const replaceClass = el => className => {
+    el.classList = filter(not(className))(Array.from(el.classList));
 
     return el;
   };
@@ -326,28 +346,26 @@
 
   const calcTransformAndApply = compose(mult(100), add(7.5), compose(cardTransform, flip(addStyle)));
 
-  const ifElseAlwaysEq = compose2(eq, compose(always, ifElseCurry));
+  const ifElseApplyAlwaysEq = compose2(eq, compose(always, ifElseApplyCurry));
 
   const addActiveClass = flip(addClass)('wine_card--active');
 
-  const composeSwitch = f => g => h => i => j => f(i)(j)(g)(h);
-
-  const ifEqAddActiveClass = composeSwitch(ifElseAlwaysEq)(addActiveClass)(identity);
+  const ifEqAddActiveClass = activeIndx => indx => ifElseApplyAlwaysEq(activeIndx)(indx)(addActiveClass)(identity);
 
   const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
 
   const eventListener = update => action => ({ target, touches }) => {
-    if (hasClass('wine_card')(target)) {
-      const firstTouch = touches[0];
-      const payload = {};
+    if (!hasClass('wine_card')(target)) return;
 
-      if (firstTouch) {
-        payload.x = firstTouch.clientX;
-        payload.y = firstTouch.clientY;
-      }
+    const firstTouch = Array.from(touches)[0];
+    const payload = {};
 
-      return update({ action, payload });
+    if (firstTouch) {
+      payload.x = firstTouch.clientX;
+      payload.y = firstTouch.clientY;
     }
+
+    return update({ action, payload });
   };
 
   const view = (el, { activeIndx, wines }, update) => {
@@ -363,30 +381,29 @@
     composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines.slice(0));
   };
 
-  const calcStyle = (deltaX, offset, shouldTransition) => initOffset => {
-    let style = `transform: translate(calc(${initOffset} - ${deltaX + offset}px), 15vh);`;
+  const transformWithCalc = start => end => `transform: translate(calc(${start} - ${end}px), 15vh);`;
 
-    if (shouldTransition) {
-      style += ' transition: transform 100ms ease-out;';
-    }
+  const flipIfElseCurry = truthey => falsey => condition => ifElseCurry(condition)(truthey)(falsey);
 
-    return style;
-  };
+  const addTransition = flipIfElseCurry('transition: transform 100ms ease-out;')('');
 
-  const updateCard = model => (el, indx) => {
-    const styleCalc = calcStyle(model.deltaX, model.offset, model.shouldTransition);
+  const calcStyle = compose2(transformWithCalc, compose(concatCurry2, compose2(pairs, applyTo(compose))(addTransition)));
 
-    el.style = styleCalc(`${7.5 + (indx * 100)}vw`);
+  const indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
 
-    if (model.activeIndx === indx) {
-      if (!hasClass('wine_card--active')(el)) {
-        el.classList.add('wine_card--active');
-      }
-    } else {
-      if (hasClass('wine_card--active')(el)) {
-        el.classList = Array.from(el.classList).shift();
-      }
-    }
+  const checkAndHasClass = condition => className => compose(hasClass(className), isFalse, and(condition));
+
+  const replaceClassIf = condition => className =>
+    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(replaceClass)(className), identity);
+
+  const toggleClass = condition => className =>
+    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), replaceClassIf(condition)(className));
+
+  const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
+    compose(
+      flip(addStyle)(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
+      toggleClass(eq(activeIndx)(indx))('wine_card--active')
+    )(el);
   };
 
   const updateView = el => model => {
