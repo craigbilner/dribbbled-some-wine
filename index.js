@@ -324,11 +324,17 @@
     return el;
   };
 
-  const a = compose(mult(100), add(7.5), compose(cardTransform, flip(addStyle)));
+  const calcTransformAndApply = compose(mult(100), add(7.5), compose(cardTransform, flip(addStyle)));
 
-  const b = activeIndx => indx => ifElse(always(eq(activeIndx)(indx)), flip(addClass)('wine_card--active'), identity);
+  const ifElseAlwaysEq = compose2(eq, compose(always, ifElseCurry));
 
-  const positionCard = activeIndx => (el, indx) => compose(a(indx), b(activeIndx)(indx))(el);
+  const addActiveClass = flip(addClass)('wine_card--active');
+
+  const composeSwitch = f => g => h => i => j => f(i)(j)(g)(h);
+
+  const ifEqAddActiveClass = composeSwitch(ifElseAlwaysEq)(addActiveClass)(identity);
+
+  const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
 
   const eventListener = update => action => ({ target, touches }) => {
     if (hasClass('wine_card')(target)) {
