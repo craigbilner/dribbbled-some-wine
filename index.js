@@ -181,7 +181,7 @@
 
   const pcntOffset = ({ deltaX, width }) => Math.abs(deltaX) / width * 100;
 
-  const outside40 = pcntOffset => pcntOffset > 40;
+  const outside40 = pcntOffset => pcntOffset > 20;
 
   const isOutsideTolerance = compose(pcntOffset, outside40);
 
@@ -360,7 +360,7 @@
   };
 
   const addStyle = el => elStyle => {
-    el.style = elStyle;
+    el.style.cssText = elStyle;
 
     return el;
   };
@@ -397,7 +397,7 @@
     el.addEventListener('touchend', doUpdate(actions.TOUCH_END));
 
     el.className = 'wine';
-    el.style = 'background-color: rgba(238, 123, 111, 1);';
+    el.style.cssText = 'background-color: rgba(238, 123, 111, 1);';
 
     composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines.slice(0));
   };
@@ -428,7 +428,7 @@
   };
 
   const updateView = el => model => {
-    el.style = model.bgColour;
+    el.style.cssText = model.bgColour;
 
     return map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
   };
