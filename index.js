@@ -326,6 +326,7 @@
       </div>
     </div>
     <img class="wine_bottle" src="${imgSrc}">
+    <div class="wine_bottle-shadow"></div>
     <div class="wine_price">
       $ ${price}.00
     </div>

@@ -44,6 +44,16 @@
     left: 32vw;
 }
 
+.wine_bottle-shadow {
+    position: absolute;
+    top: 33vh;
+    width: 58vw;
+    height: 1px;
+    left: calc(50% - 29vw);
+    border-radius: 50%;
+    box-shadow: 2px -5px 5px 0 rgba(0, 0, 0, 0.2);
+}
+
 .wine_price {
     position: absolute;
     left: calc(50% - 3rem);
