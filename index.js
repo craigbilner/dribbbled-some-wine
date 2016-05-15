@@ -77,9 +77,27 @@
 
   const hasClass = className => el => [...el.classList].indexOf(className) > -1;
 
+  const copyObj = obj => (newObj, key) => {
+    const value = obj[key];
+
+    if (Array.isArray(value)) {
+      newObj[key] = value.slice(0);
+    } else {
+      newObj[key] = value;
+    }
+
+    return newObj;
+  };
+
+  const makeCopy = obj => {
+    if (!obj) return {};
+
+    return reduce(copyObj(obj))({})(Object.keys(obj));
+  };
+
   // model
 
-  const updateModel = ({ model, obj }) => Object.assign({}, model, obj);
+  const updateModel = ({ model, obj }) => Object.assign(makeCopy(model), makeCopy(obj));
 
   const createModel = (model, obj) => {
     if (!obj) return Object.freeze(model);
@@ -322,7 +340,7 @@
     el.className = 'wine';
     el.style = 'background-color: rgba(238, 123, 111, 1);';
 
-    composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines);
+    composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines.slice(0));
   };
 
   const calcStyle = (deltaX, offset, shouldTransition) => initOffset => {
