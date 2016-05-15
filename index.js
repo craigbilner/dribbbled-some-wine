@@ -335,9 +335,9 @@
     </div>
   `;
 
-  const createCard = wine => {
+  const createCard = (wine, indx) => {
     const card = document.createElement('div');
-    card.className = 'wine_card';
+    card.className = `wine_card card_${indx}`;
     card.textContent = wine.name;
     card.innerHTML = template(wine);
 
@@ -352,8 +352,8 @@
     return el;
   };
 
-  const replaceClass = el => className => {
-    el.classList = filter(not(className))(Array.from(el.classList));
+  const removeClass = el => className => {
+    el.classList.remove(className);
 
     return el;
   };
@@ -413,11 +413,11 @@
 
   const checkAndHasClass = condition => className => compose(hasClass(className), isFalse, and(condition));
 
-  const replaceClassIf = condition => className =>
-    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(replaceClass)(className), identity);
+  const removeClassIf = condition => className =>
+    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(removeClass)(className), identity);
 
   const toggleClass = condition => className =>
-    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), replaceClassIf(condition)(className));
+    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), removeClassIf(condition)(className));
 
   const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
     compose(

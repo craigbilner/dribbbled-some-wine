@@ -70,6 +70,16 @@
     border-radius: 1rem;
 }
 
+.card_0 .wine_button {
+    border-color: rgba(238, 123, 111, 1);
+    color: rgba(238, 123, 111, 1);
+}
+
+.card_1 .wine_button {
+    border-color: rgba(250, 202, 138, 1);
+    color: rgba(250, 202, 138, 1);
+}
+
 .wine_card--active {
 
 }
