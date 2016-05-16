@@ -16,6 +16,7 @@
     background-color: white;
     position: absolute;
     border-radius: 1rem;
+    top: calc(50% - 37.5vh);
 }
 
 .wine_title {

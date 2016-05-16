@@ -345,7 +345,7 @@
     return card;
   };
 
-  const cardTransform = offset => `transform: translate(${offset}vw, 15vh)`;
+  const transformWithCalc = start => end => `transform: translateX(calc(${start} - ${end}px));`;
 
   const addClass = el => className => {
     el.classList.add(className);
@@ -365,7 +365,9 @@
     return el;
   };
 
-  const calcTransformAndApply = compose(mult(100), add(7.5), compose(cardTransform, flip(addStyle)));
+  const initCardTransform = compose(flip(transformWithCalc)(0), flip(addStyle));
+
+  const calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
 
   const ifElseApplyAlwaysEq = compose2(eq, compose(always, ifElseApplyCurry));
 
@@ -375,7 +377,10 @@
 
   const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
 
-  const eventListener = update => action => ({ target, touches }) => {
+  const eventListener = update => action => (evt) => {
+    evt.preventDefault();
+
+    const { target, touches } = evt;
     if (!hasClass('wine_card')(target)) return;
 
     const firstTouch = Array.from(touches)[0];
@@ -401,8 +406,6 @@
 
     composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines.slice(0));
   };
-
-  const transformWithCalc = start => end => `transform: translate(calc(${start} - ${end}px), 15vh);`;
 
   const flipIfElseCurry = truthey => falsey => condition => ifElseCurry(condition)(truthey)(falsey);
 
