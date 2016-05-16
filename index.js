@@ -182,7 +182,8 @@
     shouldSwipeAway: false,
     shouldTransition: false,
     activeIndx: 0,
-    swipeDir: direction.NEITHER
+    swipeDir: direction.NEITHER,
+    expanded: false,
   });
 
   // update
@@ -191,6 +192,7 @@
     TOUCH_START: 'TOUCH_START',
     TOUCH_MOVE: 'TOUCH_MOVE',
     TOUCH_END: 'TOUCH_END',
+    CLICK: 'CLICK',
   };
 
   const crementIndx = ({ swipeDir }) => swipeDir === direction.LEFT ? 1 : -1;
@@ -288,7 +290,7 @@
         shouldTransition: false,
         shouldSwipeAway: false,
         bgColour: colourArrayToString(colours[model.activeIndx]),
-      }
+      },
     });
   };
 
@@ -303,7 +305,7 @@
         deltaX,
         swipeDir,
         bgColour,
-      }
+      },
     });
   };
 
@@ -322,7 +324,16 @@
         activeIndx,
         swipeDir: direction.NEITHER,
         bgColour: colourArrayToString(colours[activeIndx]),
-      }
+      },
+    });
+  };
+
+  const handleClick = model => {
+    return updateModel({
+      model,
+      obj: {
+        expanded: !model.expanded,
+      },
     });
   };
 
@@ -337,6 +348,9 @@
     case actions.TOUCH_END:
       return handleTouchEnd(model, payload);
       break;
+    case actions.CLICK:
+      return handleClick(model);
+      break;
     default:
       throw new Error('unknown action');
     }
@@ -345,20 +359,21 @@
   // view
 
   const template = ({ name, fullName, price, imgSrc }) => `
+    <div class="wine_overlay draggable"></div>
     <div class="wine_title">
-      <div class="wine_title_main">
+      <div class="wine_title_main draggable">
         ${name}
       </div>
-      <div class="wine_title_sub">
+      <div class="wine_title_sub draggable">
         ${fullName}
       </div>
     </div>
     <img class="wine_bottle" src="${imgSrc}">
-    <div class="wine_bottle-shadow"></div>
-    <div class="wine_price">
+    <div class="wine_bottle-shadow draggable"></div>
+    <div class="wine_price draggable">
       $ ${price}.00
     </div>
-    <div class="wine_separator"></div>
+    <div class="wine_separator draggable"></div>
     <div class="wine_button">
       BUY NOW
     </div>
@@ -400,11 +415,19 @@
 
   const updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
 
-  const eventListener = update => action => (evt) => {
+  const isBottleStart = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_START));
+
+  const isBottleEnd = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_END));
+
+  const eventListener = update => action => evt => {
     evt.preventDefault();
 
     const { target, touches } = evt;
-    if (!hasClass('wine_card')(target)) return;
+    if (isBottleStart(target)(action)) return;
+
+    if (isBottleEnd(target)(action)) return update({ action: actions.CLICK });
+
+    if (!hasClass('draggable')(target)) return;
 
     const firstTouch = Array.from(touches)[0];
     const payload = {};
@@ -439,7 +462,14 @@
     composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(el))(wines.slice(0));
   };
 
-  const updateView = el => model => compose(queryAll('.wine_card'), updateEachCard(model))(addStyle(el)(model.bgColour));
+  const toggleExpandedClass = ({ expanded }) =>
+    ifElseApply(always(expanded), flip(addClass)('wine_card--expanded'), flip(removeClass)('wine_card--expanded'));
+
+  const updateView = el => model => {
+    console.log(model);
+    return compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), flip(addStyle)(model.bgColour))(el));
+  };
+
 
   // app
 

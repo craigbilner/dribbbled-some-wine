@@ -19,6 +19,18 @@
     top: calc(50% - 37.5vh);
 }
 
+.wine_overlay {
+    background-color: white;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 1rem;
+    transform-origin: top;
+    transition: transform 100ms ease-out;
+}
+
 .wine_title {
     position: absolute;
     width: 100%;
