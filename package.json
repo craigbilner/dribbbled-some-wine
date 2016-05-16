@@ -1,0 +1,30 @@
+{
+  "name": "dribbbled-some-wine",
+  "version": "1.0.0",
+  "description": "An experiment with a point free FE",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/craigbilner/dribbbled-some-wine.git"
+  },
+  "keywords": [
+    "functional",
+    "point",
+    "free",
+    "wine"
+  ],
+  "author": "Craig Bilner",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/craigbilner/dribbbled-some-wine/issues"
+  },
+  "homepage": "https://github.com/craigbilner/dribbbled-some-wine#readme",
+  "devDependencies": {
+    "koa": "^1.2.0",
+    "koa-static": "^2.0.0"
+  }
+}
