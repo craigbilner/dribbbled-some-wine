@@ -31,8 +31,6 @@
 
   const sum = reduce((a, b) => add(a)(b))(0);
 
-  const ifElse = (condition, truthey, falsey) => condition ? truthey : falsey;
-
   const ifElseApply = (condition, truthey, falsey) => a => condition(a) ? truthey(a) : falsey(a);
 
   const ifElseApply2 = (condition, truthey, falsey) => a => b => condition(a)(b) ? truthey(a)(b) : falsey(a)(b);
@@ -41,13 +39,13 @@
 
   const ifElseCurry = condition => truthey => falsey => condition ? truthey : falsey;
 
+  const flipIfElseCurry = truthey => falsey => condition => ifElseCurry(condition)(truthey)(falsey);
+
   const apply = x => func => func(x);
 
   const apply3 = x => y => z => func => func(x)(y)(z);
 
   const applyTo = func => args => func.apply(null, [...args]);
-
-  const applyToUnit = func => a => func.apply(null, [a]);
 
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
 
@@ -62,6 +60,8 @@
   const compose3 = (h, ...tail) => a => b => applyTo(compose)([h(a)(b), ...tail]);
 
   const compose4 = (h, ...tail) => a => b => c => applyTo(compose)([h(a)(b)(c), ...tail]);
+
+  const ifElseApplyAlwaysEq = compose2(eq, compose(always, ifElseApplyCurry));
 
   const applyMap3 = compose3(apply3, map);
 
@@ -79,6 +79,8 @@
 
   const pairs = a => b => [a, b];
 
+  const toArr = a => [a];
+
   const propMap = compose(prop, map);
 
   const propMapPair = pairs(propMap);
@@ -92,8 +94,6 @@
   const appendChild = container => child => container.appendChild(child);
 
   const concatCurry2 = a => b => a.concat(b);
-
-  const hasClass = className => el => [...el.classList].indexOf(className) > -1;
 
   const copyObj = obj => (newObj, key) => {
     const value = obj[key];
@@ -112,6 +112,36 @@
 
     return reduce(copyObj(obj))({})(Object.keys(obj));
   };
+
+  const addClass = el => className => {
+    el.classList.add(className);
+
+    return el;
+  };
+
+  const removeClass = el => className => {
+    el.classList.remove(className);
+
+    return el;
+  };
+
+  const addStyle = el => elStyle => {
+    el.style.cssText = elStyle;
+
+    return el;
+  };
+
+  const hasClass = className => el => [...el.classList].indexOf(className) > -1;
+
+  const checkAndHasClass = condition => className => compose(hasClass(className), isFalse, and(condition));
+
+  const removeClassIf = condition => className =>
+    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(removeClass)(className), identity);
+
+  const toggleClass = condition => className =>
+    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), removeClassIf(condition)(className));
+
+  const queryAll = selector => el => el.querySelectorAll(selector);
 
   // model
 
@@ -226,8 +256,6 @@
   const extractPairs = compose2(colourDiff, flipPropMapPair);
 
   const composeColours = compose2(extractPairs, compose(pairs(pairs), applyTo(compose2)));
-
-  const toArr = a => [a];
 
   const calcColours = compose2(compose(toArr, applyTo(map)), applyTo(colourObjToString));
 
@@ -347,35 +375,30 @@
 
   const transformWithCalc = start => end => `transform: translateX(calc(${start} - ${end}px));`;
 
-  const addClass = el => className => {
-    el.classList.add(className);
-
-    return el;
-  };
-
-  const removeClass = el => className => {
-    el.classList.remove(className);
-
-    return el;
-  };
-
-  const addStyle = el => elStyle => {
-    el.style.cssText = elStyle;
-
-    return el;
-  };
-
   const initCardTransform = compose(flip(transformWithCalc)(0), flip(addStyle));
 
   const calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
-
-  const ifElseApplyAlwaysEq = compose2(eq, compose(always, ifElseApplyCurry));
 
   const addActiveClass = flip(addClass)('wine_card--active');
 
   const ifEqAddActiveClass = activeIndx => indx => ifElseApplyAlwaysEq(activeIndx)(indx)(addActiveClass)(identity);
 
   const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
+
+  const addTransition = flipIfElseCurry('transition: transform 100ms ease-out;')('');
+
+  const calcStyle = compose2(transformWithCalc, compose(concatCurry2, compose2(pairs, applyTo(compose))(addTransition)));
+
+  const indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
+
+  const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
+    compose(
+      flip(addStyle)(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
+      toggleClass(eq(activeIndx)(indx))('wine_card--active')
+    )(el);
+  };
+
+  const updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
 
   const eventListener = update => action => (evt) => {
     evt.preventDefault();
@@ -394,47 +417,29 @@
     return update({ action, payload });
   };
 
+  const initStyles = compose(flip(addClass)('wine'), flip(addStyle)('background-color: rgba(238, 123, 111, 1);'));
+
+  const styleAndAppend = compose(initStyles, appendChild);
+
+  const addEventListener = eventName => listener => el => {
+    el.addEventListener(eventName, listener);
+
+    return el;
+  };
+
   const view = (el, { activeIndx, wines }, update) => {
     const doUpdate = eventListener(update);
 
-    el.addEventListener('touchstart', doUpdate(actions.TOUCH_START));
-    el.addEventListener('touchmove', doUpdate(actions.TOUCH_MOVE));
-    el.addEventListener('touchend', doUpdate(actions.TOUCH_END));
-
-    el.className = 'wine';
-    el.style.cssText = 'background-color: rgba(238, 123, 111, 1);';
-
-    composeWrap(map)(createCard, positionCard(activeIndx), appendChild(el))(wines.slice(0));
-  };
-
-  const flipIfElseCurry = truthey => falsey => condition => ifElseCurry(condition)(truthey)(falsey);
-
-  const addTransition = flipIfElseCurry('transition: transform 100ms ease-out;')('');
-
-  const calcStyle = compose2(transformWithCalc, compose(concatCurry2, compose2(pairs, applyTo(compose))(addTransition)));
-
-  const indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
-
-  const checkAndHasClass = condition => className => compose(hasClass(className), isFalse, and(condition));
-
-  const removeClassIf = condition => className =>
-    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(removeClass)(className), identity);
-
-  const toggleClass = condition => className =>
-    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), removeClassIf(condition)(className));
-
-  const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
     compose(
-      flip(addStyle)(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
-      toggleClass(eq(activeIndx)(indx))('wine_card--active')
+      addEventListener('touchstart')(doUpdate(actions.TOUCH_START)),
+      addEventListener('touchmove')(doUpdate(actions.TOUCH_MOVE)),
+      addEventListener('touchend')(doUpdate(actions.TOUCH_END))
     )(el);
+
+    composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(el))(wines.slice(0));
   };
 
-  const updateView = el => model => {
-    el.style.cssText = model.bgColour;
-
-    return map(updateCard(model))(Array.from(el.querySelectorAll('.wine_card')));
-  };
+  const updateView = el => model => compose(queryAll('.wine_card'), updateEachCard(model))(addStyle(el)(model.bgColour));
 
   // app
 
