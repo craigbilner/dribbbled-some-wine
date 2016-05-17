@@ -41,6 +41,11 @@
     text-align: center;
     top: 5vh;
     text-transform: uppercase;
+    transition: transform 100ms ease-out;
+}
+
+.wine--expanded .wine_title {
+    transform: translateY(6vh);
 }
 
 .wine_title_main {
@@ -51,6 +56,14 @@
     margin-top: 1rem;
     color: rgb(193, 193, 193);
     font-size: 0.75rem;
+}
+
+.wine_bottle-container {
+    transition: transform 100ms ease-out;
+}
+
+.wine--expanded .wine_bottle-container {
+    transform: translateY(-27vh);
 }
 
 .wine_bottle {
@@ -82,6 +95,11 @@
     top: 60%;
     font-size: 1.5rem;
     color: rgb(154, 154, 154);
+    transition: transform 100ms ease-in 25ms;
+}
+
+.wine--expanded .wine_price {
+    transform: translateY(-22vh);
 }
 
 .wine_separator {
@@ -92,6 +110,45 @@
     left: calc(50% - 25vw);
 }
 
+.wine_details {
+    position: absolute;
+    transform: translateY(90vh);
+    transition: transform 100ms ease-out;
+}
+
+.wine--expanded .wine_details {
+    transform: translateY(34vh);
+}
+
+.wine_details_text {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #BDBDBD;
+}
+
+.wine_details_table {
+    display: flex;
+    flex-flow: column;
+    padding: 2rem;
+    height: 25vh;
+    justify-content: space-around;
+    font-size: 0.9rem;
+}
+
+.wine_row {
+    display: flex;
+    flex-flow: row;
+}
+
+.wine_label, .wine_value {
+    flex: 1;
+}
+
+.wine_value {
+    display: flex;
+    justify-content: flex-end;
+}
+
 .wine_button {
     position: absolute;
     top: 85%;
@@ -100,6 +157,11 @@
     border: 1px solid;
     padding: 0.5rem 1.5rem;
     border-radius: 1rem;
+    transition: transform 100ms ease-out;
+}
+
+.wine--expanded .wine_button {
+    transform: translateY(11vh);
 }
 
 .card_0 .wine_button {

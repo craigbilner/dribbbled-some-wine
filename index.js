@@ -360,7 +360,7 @@
 
   // view
 
-  const template = ({ name, fullName, price, imgSrc }) => `
+  const template = ({ name, fullName, price, imgSrc, desc, origin, type, alcohol }) => `
     <div class="wine_overlay draggable"></div>
     <div class="wine_title">
       <div class="wine_title_main draggable">
@@ -370,12 +370,33 @@
         ${fullName}
       </div>
     </div>
-    <img class="wine_bottle" src="${imgSrc}">
-    <div class="wine_bottle-shadow draggable"></div>
+    <div class="wine_bottle-container">
+      <img class="wine_bottle" src="${imgSrc}">
+      <div class="wine_bottle-shadow draggable"></div>
+    </div>
     <div class="wine_price draggable">
       $ ${price}.00
     </div>
     <div class="wine_separator draggable"></div>
+    <div class="wine_details draggable">
+      <div class="wine_details_text">
+        ${desc}
+      </div>
+      <div class="wine_details_table">
+        <div class="wine_origin wine_row">
+          <div class="wine_label">Origin</div>
+          <div class="wine_value">${origin}</div>
+        </div>
+        <div class="wine_type wine_row">
+          <div class="wine_label">Type</div>
+          <div class="wine_value">${type}</div>
+        </div>
+        <div class="wine_alcohol wine_row">
+          <div class="wine_label">Alcohol</div>
+          <div class="wine_value">${alcohol}</div>
+        </div>
+      </div>
+    </div>
     <div class="wine_button">
       BUY NOW
     </div>
