@@ -145,6 +145,12 @@
 
   // model
 
+  const colourObjToArray = ({ r, g, b }) => [r, g, b];
+
+  const colourObjToString = (r, g, b) => `background-color: rgba(${r}, ${g}, ${b}, 1);`;
+
+  const colourArrayToString = compose(colourObjToArray, applyTo(colourObjToString));
+
   const updateModel = ({ model, obj }) => Object.assign(makeCopy(model), makeCopy(obj));
 
   const createModel = (model, obj) => {
@@ -184,6 +190,7 @@
     activeIndx: 0,
     swipeDir: direction.NEITHER,
     expanded: false,
+    bgColour: colourArrayToString(colours[0]),
   });
 
   // update
@@ -249,10 +256,6 @@
 
   const getOffset = ssa => model => composeOffset(ssa)(model)();
 
-  const colourObjToArray = ({ r, g, b }) => [r, g, b];
-
-  const colourObjToString = (r, g, b) => `background-color: rgba(${r}, ${g}, ${b}, 1);`;
-
   const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
 
   const extractPairs = compose2(colourDiff, flipPropMapPair);
@@ -280,7 +283,6 @@
   const calcColour = width => deltaX => activeIndx => wines =>
     compose3(backgroundColour, mapComposePipe3)(width)(deltaX)(colours[activeIndx])(activeIndx)(wines)([swipeLeftCheck, swipeRightCheck]);
 
-  const colourArrayToString = compose(colourObjToArray, applyTo(colourObjToString));
 
   const handleTouchStart = (model, { x }) => {
     return updateModel({
@@ -423,9 +425,9 @@
     evt.preventDefault();
 
     const { target, touches } = evt;
-    if (isBottleStart(target)(action)) return;
+    if (isBottleEnd(target)(action)) return;
 
-    if (isBottleEnd(target)(action)) return update({ action: actions.CLICK });
+    if (isBottleStart(target)(action)) return update({ action: actions.CLICK });
 
     if (!hasClass('draggable')(target)) return;
 
@@ -440,9 +442,9 @@
     return update({ action, payload });
   };
 
-  const initStyles = compose(flip(addClass)('wine'), flip(addStyle)('background-color: rgba(238, 123, 111, 1);'));
+  const initStyles = model => compose(flip(addClass)('wine'), compose(prop('bgColour'), flip(addStyle))(model));
 
-  const styleAndAppend = compose(initStyles, appendChild);
+  const styleAndAppend = compose2(initStyles, appendChild);
 
   const addEventListener = eventName => listener => el => {
     el.addEventListener(eventName, listener);
@@ -459,17 +461,14 @@
       addEventListener('touchend')(doUpdate(actions.TOUCH_END))
     )(el);
 
-    composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(el))(wines.slice(0));
+    composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(model)(el))(wines.slice(0));
   };
 
   const toggleExpandedClass = ({ expanded }) =>
-    ifElseApply(always(expanded), flip(addClass)('wine_card--expanded'), flip(removeClass)('wine_card--expanded'));
+    ifElseApply(always(expanded), flip(addClass)('wine--expanded'), flip(removeClass)('wine--expanded'));
 
-  const updateView = el => model => {
-    console.log(model);
-    return compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), flip(addStyle)(model.bgColour))(el));
-  };
-
+  const updateView = el => model =>
+    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), flip(addStyle)(model.bgColour))(el));
 
   // app
 

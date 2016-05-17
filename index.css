@@ -31,6 +31,10 @@
     transition: transform 100ms ease-out;
 }
 
+.wine--expanded .wine_overlay {
+    transform: scale(1.4);
+}
+
 .wine_title {
     position: absolute;
     width: 100%;
