@@ -91,10 +91,11 @@
 
 .wine_price {
     position: absolute;
-    left: calc(50% - 3.5rem);
-    top: 60%;
+    width: 100%;
+    text-align: center;
+    top: 44vh;
     font-size: 1.5rem;
-    color: rgb(154, 154, 154);
+    color: rgb(90, 90, 90);
     transition: transform 100ms ease-in 25ms;
 }
 
@@ -105,8 +106,8 @@
 .wine_separator {
     position: absolute;
     width: 50vw;
-    top: 56vh;
-    border-top: 1px solid #c1c1c1;
+    top: 54vh;
+    border-top: 1px solid rgb(230, 230, 230);
     left: calc(50% - 25vw);
 }
 
@@ -117,22 +118,27 @@
 }
 
 .wine--expanded .wine_details {
-    transform: translateY(34vh);
+    transform: translateY(28vh);
 }
 
 .wine_details_text {
     text-align: center;
-    font-size: 0.75rem;
-    color: #BDBDBD;
+    font-size: 0.9rem;
+    color: rgb(189, 189, 189);
+    line-height: 3.5vh;
+    margin: 2vh 0;
 }
 
 .wine_details_table {
     display: flex;
     flex-flow: column;
-    padding: 2rem;
     height: 25vh;
     justify-content: space-around;
     font-size: 0.9rem;
+    padding: 0px 5vw;
+    border: 1px solid rgb(228, 226, 226);
+    border-bottom: none;
+    color: rgb(152, 148, 148);
 }
 
 .wine_row {
@@ -149,27 +155,33 @@
     justify-content: flex-end;
 }
 
-.wine_button {
+.wine_button-container {
     position: absolute;
-    top: 85%;
-    left: calc(50% - 4.5rem);
+    top: 50vh;
+    width: 42vw;
+    padding: 5rem 5rem 0 5rem;
+    background-color: rgba(255,255,255,0.5);
+    transition: transform 100ms ease-out;
+}
+
+.wine--expanded .wine_button-container {
+    transform: translateY(11vh);
+}
+
+.wine_button {
     font-size: 1.25rem;
     border: 1px solid;
     padding: 0.5rem 1.5rem;
     border-radius: 1rem;
-    transition: transform 100ms ease-out;
-}
-
-.wine--expanded .wine_button {
-    transform: translateY(11vh);
+    text-align: center;
 }
 
 .card_0 .wine_button {
-    border-color: rgba(238, 123, 111, 1);
-    color: rgba(238, 123, 111, 1);
+    border-color: rgb(238, 123, 111);
+    color: rgb(238, 123, 111);
 }
 
 .card_1 .wine_button {
-    border-color: rgba(250, 202, 138, 1);
-    color: rgba(250, 202, 138, 1);
+    border-color: rgb(250, 202, 138);
+    color: rgb(250, 202, 138);
 }

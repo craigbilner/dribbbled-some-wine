@@ -388,17 +388,19 @@
           <div class="wine_value">${origin}</div>
         </div>
         <div class="wine_type wine_row">
-          <div class="wine_label">Type</div>
+          <div class="wine_label">Wine Type</div>
           <div class="wine_value">${type}</div>
         </div>
         <div class="wine_alcohol wine_row">
           <div class="wine_label">Alcohol</div>
-          <div class="wine_value">${alcohol}</div>
+          <div class="wine_value">${alcohol}%</div>
         </div>
       </div>
     </div>
-    <div class="wine_button">
-      BUY NOW
+    <div class="wine_button-container">
+      <div class="wine_button">
+        BUY NOW
+      </div>
     </div>
   `;
 
