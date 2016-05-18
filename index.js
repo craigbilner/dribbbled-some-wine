@@ -362,7 +362,7 @@
 
   const template = ({ name, fullName, price, imgSrc, desc, origin, type, alcohol }) => `
     <div class="wine_overlay draggable"></div>
-    <div class="wine_title">
+    <div class="wine_title draggable">
       <div class="wine_title_main draggable">
         ${name}
       </div>
@@ -379,10 +379,10 @@
     </div>
     <div class="wine_separator draggable"></div>
     <div class="wine_details draggable">
-      <div class="wine_details_text">
+      <div class="wine_details_text draggable">
         ${desc}
       </div>
-      <div class="wine_details_table">
+      <div class="wine_details_table draggable">
         <div class="wine_origin wine_row">
           <div class="wine_label">Origin</div>
           <div class="wine_value">${origin}</div>
@@ -397,7 +397,7 @@
         </div>
       </div>
     </div>
-    <div class="wine_button-container">
+    <div class="wine_button-container draggable">
       <div class="wine_button">
         BUY NOW
       </div>
@@ -501,6 +501,11 @@
       fullName: 'Barolo di castiglione falletto',
       imgSrc: 'barolo.png',
       price: 550,
+      desc: 'Made from the Nebbiolo grape and is often described as one of Italy\'s greatest wines - it has the ' +
+      'aroma of tar and roses due to it\'s notable aging',
+      origin: 'Piedmont, Italy',
+      type: 'DOCG',
+      alcohol: 12,
     },
     {
       name: 'Moscato',

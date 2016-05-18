@@ -1,6 +1,7 @@
 * {
     padding: 0;
     margin: 0;
+    box-sizing: border-box;
     font-family: 'Montserrat', sans-serif;
 }
 
@@ -17,6 +18,7 @@
     position: absolute;
     border-radius: 1rem;
     top: calc(50% - 37.5vh);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
 }
 
 .wine_overlay {
@@ -81,12 +83,12 @@
 
 .wine_bottle-shadow {
     position: absolute;
-    top: 33vh;
+    top: 32vh;
     width: 58vw;
-    height: 1px;
+    height: 1vh;
     left: calc(50% - 29vw);
     border-radius: 50%;
-    box-shadow: 2px -5px 5px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2vh 2vh 0 rgba(0, 0, 0, 0.1);
 }
 
 .wine_price {
@@ -113,6 +115,7 @@
 
 .wine_details {
     position: absolute;
+    padding: 0 2vw;
     transform: translateY(90vh);
     transition: transform 200ms ease-in 25ms;
 }
@@ -123,10 +126,12 @@
 
 .wine_details_text {
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: rgb(189, 189, 189);
     line-height: 3.5vh;
     margin: 2vh 0;
+    height: 14vh;
+    overflow: hidden;
 }
 
 .wine_details_table {
@@ -158,8 +163,8 @@
 .wine_button-container {
     position: absolute;
     top: 50vh;
-    width: 42vw;
-    padding: 5rem 5rem 0 5rem;
+    width: 85vw;
+    padding: 12vh 22vw 0 22vw;
     background-color: rgba(255,255,255,0.5);
     transition: transform 200ms ease-in;
 }
@@ -171,7 +176,7 @@
 .wine_button {
     font-size: 1.25rem;
     border: 1px solid;
-    padding: 0.5rem 1.5rem;
+    padding: 1.5vh 6vw;
     border-radius: 1rem;
     text-align: center;
 }
