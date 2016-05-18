@@ -28,7 +28,7 @@
     height: 100%;
     border-radius: 1rem;
     transform-origin: top;
-    transition: transform 100ms ease-out;
+    transition: transform 200ms ease-in;
 }
 
 .wine--expanded .wine_overlay {
@@ -41,7 +41,7 @@
     text-align: center;
     top: 5vh;
     text-transform: uppercase;
-    transition: transform 100ms ease-out;
+    transition: transform 200ms ease-in;
 }
 
 .wine--expanded .wine_title {
@@ -59,7 +59,7 @@
 }
 
 .wine_bottle-container {
-    transition: transform 100ms ease-out;
+    transition: transform 200ms ease-in;
 }
 
 .wine--expanded .wine_bottle-container {
@@ -69,8 +69,8 @@
 .wine_bottle {
     position: absolute;
     top: 10vh;
-    transform: rotate(90deg) translateY(12vw);
-    transition: transform 100ms ease-in 25ms;
+    transform: rotate(90deg) translateY(8vw);
+    transition: transform 200ms ease-in 25ms;
     height: 60vw;
     left: 32vw;
 }
@@ -114,7 +114,7 @@
 .wine_details {
     position: absolute;
     transform: translateY(90vh);
-    transition: transform 100ms ease-out;
+    transition: transform 200ms ease-in 25ms;
 }
 
 .wine--expanded .wine_details {
@@ -161,7 +161,7 @@
     width: 42vw;
     padding: 5rem 5rem 0 5rem;
     background-color: rgba(255,255,255,0.5);
-    transition: transform 100ms ease-out;
+    transition: transform 200ms ease-in;
 }
 
 .wine--expanded .wine_button-container {
