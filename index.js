@@ -49,6 +49,8 @@
 
   const compose = (...funcs) => data => reduce((val, func) => func(val))(data)(funcs);
 
+  const composeCurry2 = a => b => compose(a, b);
+
   const composeWrap = wrapper => (...funcs) => data => reduce((val, func) => wrapper(func)(val))(data)(funcs);
 
   const applyMap = compose(apply, map);
@@ -360,6 +362,78 @@
 
   // view
 
+  const transformWithCalc = start => end => `transform: translateX(calc(${start} - ${end}px));`;
+
+  const initCardTransform = compose(flip(transformWithCalc)(0), addStyle);
+
+  const calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
+
+  const addActiveClass = addClass('wine_card--active');
+
+  const ifEqAddActiveClass = activeIndx => indx => ifElseApplyAlwaysEq(activeIndx)(indx)(addActiveClass)(identity);
+
+  const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
+
+  const addTransition = flipIfElseCurry('transition: transform 100ms ease-out;')('');
+
+  const calcStyle = compose2(transformWithCalc, compose(concatCurry2, compose2(pairs, applyTo(compose))(addTransition)));
+
+  const indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
+
+  const isBottleStart = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_START));
+
+  const isBottleEnd = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_END));
+
+  const initStyles = model => compose(addClass('wine'), compose(prop('bgColour'), addStyle)(model));
+
+  const styleAndAppend = compose2(initStyles, appendChild);
+
+  const toggleExpandedClass = ({ expanded }) =>
+    ifElseApply(always(expanded), addClass, removeClass);
+
+  const addColourStyle = ({ bgColour }) => addStyle(bgColour);
+
+  const toggleClassAndChangeStyle =
+    compose(flipApplyMap([flip(toggleExpandedClass)('wine--expanded'), addColourStyle]), applyTo(compose));
+
+  const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
+    compose(
+      addStyle(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
+      toggleClass(eq(activeIndx)(indx))('wine_card--active')
+    )(el);
+  };
+
+  const updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
+
+  const queryAndUpdateCards = compose(updateEachCard, compose(pairs(queryAll('.wine_card')), applyTo(compose)));
+
+  const eventListener = update => action => evt => {
+    evt.preventDefault();
+
+    const { target, touches } = evt;
+    if (isBottleEnd(target)(action)) return;
+
+    if (isBottleStart(target)(action)) return update({ action: actions.CLICK });
+
+    if (!hasClass('draggable')(target)) return;
+
+    const firstTouch = Array.from(touches)[0];
+    const payload = {};
+
+    if (firstTouch) {
+      payload.x = firstTouch.clientX;
+      payload.y = firstTouch.clientY;
+    }
+
+    return update({ action, payload });
+  };
+
+  const addEventListener = eventName => listener => el => {
+    el.addEventListener(eventName, listener);
+
+    return el;
+  };
+
   const template = ({ name, fullName, price, imgSrc, desc, origin, type, alcohol }) => `
     <div class="wine_overlay draggable"></div>
     <div class="wine_title draggable">
@@ -413,68 +487,6 @@
     return card;
   };
 
-  const transformWithCalc = start => end => `transform: translateX(calc(${start} - ${end}px));`;
-
-  const initCardTransform = compose(flip(transformWithCalc)(0), addStyle);
-
-  const calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
-
-  const addActiveClass = addClass('wine_card--active');
-
-  const ifEqAddActiveClass = activeIndx => indx => ifElseApplyAlwaysEq(activeIndx)(indx)(addActiveClass)(identity);
-
-  const positionCard = activeIndx => (el, indx) => compose(calcTransformAndApply(indx), ifEqAddActiveClass(activeIndx)(indx))(el);
-
-  const addTransition = flipIfElseCurry('transition: transform 100ms ease-out;')('');
-
-  const calcStyle = compose2(transformWithCalc, compose(concatCurry2, compose2(pairs, applyTo(compose))(addTransition)));
-
-  const indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
-
-  const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
-    compose(
-      addStyle(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
-      toggleClass(eq(activeIndx)(indx))('wine_card--active')
-    )(el);
-  };
-
-  const updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
-
-  const isBottleStart = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_START));
-
-  const isBottleEnd = target => action => and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_END));
-
-  const eventListener = update => action => evt => {
-    evt.preventDefault();
-
-    const { target, touches } = evt;
-    if (isBottleEnd(target)(action)) return;
-
-    if (isBottleStart(target)(action)) return update({ action: actions.CLICK });
-
-    if (!hasClass('draggable')(target)) return;
-
-    const firstTouch = Array.from(touches)[0];
-    const payload = {};
-
-    if (firstTouch) {
-      payload.x = firstTouch.clientX;
-      payload.y = firstTouch.clientY;
-    }
-
-    return update({ action, payload });
-  };
-
-  const initStyles = model => compose(addClass('wine'), compose(prop('bgColour'), addStyle)(model));
-
-  const styleAndAppend = compose2(initStyles, appendChild);
-
-  const addEventListener = eventName => listener => el => {
-    el.addEventListener(eventName, listener);
-
-    return el;
-  };
-
   const view = (el, { activeIndx, wines }, update) => {
     const doUpdate = eventListener(update);
 
@@ -487,11 +499,7 @@
     composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(model)(el))(wines.slice(0));
   };
 
-  const toggleExpandedClass = ({ expanded }) =>
-    ifElseApply(always(expanded), addClass, removeClass);
-
-  const updateView = el => model =>
-    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model)('wine--expanded'), addStyle(model.bgColour))(el));
+  const updateView = compose(flip(applyMap)([toggleClassAndChangeStyle, queryAndUpdateCards]), applyTo(compose));
 
   // app
 
@@ -532,7 +540,7 @@
     view(el, newModel, params => {
       newModel = update(newModel)(params);
 
-      requestAnimationFrame(() => updateView(el)(newModel));
+      requestAnimationFrame(() => updateView(newModel)(el));
     });
   };
 
