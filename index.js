@@ -166,6 +166,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       };
     };
 
+    var composeCurry2 = function composeCurry2(a) {
+      return function (b) {
+        return compose(a, b);
+      };
+    };
+
     var composeWrap = function composeWrap(wrapper) {
       return function () {
         for (var _len2 = arguments.length, funcs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -264,6 +270,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var flipPropMapPair = compose(compose(propMapPair, applyToCompose2), flip);
 
+    var argsPipeToCompose = function argsPipeToCompose(a, b) {
+      return compose(a)(b);
+    };
+
+    var applyToComposePair = compose2(pairs, applyTo(compose));
+
+    var mapComposePipe3 = compose3(applyMap3, flip(applyToComposePair)(applyTo(argsPipeToCompose)));
+
     var freezeIt = Object.freeze;
 
     var appendChild = function appendChild(container) {
@@ -298,24 +312,24 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       return reduce(copyObj(obj))({})(Object.keys(obj));
     };
 
-    var addClass = function addClass(el) {
-      return function (className) {
+    var addClass = function addClass(className) {
+      return function (el) {
         el.classList.add(className);
 
         return el;
       };
     };
 
-    var removeClass = function removeClass(el) {
-      return function (className) {
+    var removeClass = function removeClass(className) {
+      return function (el) {
         el.classList.remove(className);
 
         return el;
       };
     };
 
-    var addStyle = function addStyle(el) {
-      return function (elStyle) {
+    var addStyle = function addStyle(elStyle) {
+      return function (el) {
         el.style.cssText = elStyle;
 
         return el;
@@ -336,13 +350,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var removeClassIf = function removeClassIf(condition) {
       return function (className) {
-        return ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(removeClass)(className), identity);
+        return ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), removeClass(className), identity);
       };
     };
 
     var toggleClass = function toggleClass(condition) {
       return function (className) {
-        return ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), removeClassIf(condition)(className));
+        return ifElseApply(checkAndHasClass(condition)(className), addClass(className), removeClassIf(condition)(className));
       };
     };
 
@@ -511,7 +525,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
           var start = _ref8[0];
           var end = _ref8[1];
-          return start + Math.round(Math.abs(deltaX / width) * (end - start));
+          return add(start)(Math.round(mult(Math.abs(deltaX / width))(end - start)));
         };
       };
     };
@@ -543,14 +557,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var swipeRightCheck = compose3(swipeRightColours, always, compose(pairs(isRight), applyTo(ifElseApply)));
 
     var swipeLeftCheck = compose3(swipeLeftColours, always, ifElseApplyCurry(isLeft));
-
-    var argsPipeToCompose = function argsPipeToCompose(a, b) {
-      return compose(a)(b);
-    };
-
-    var applyToComposePair = compose2(pairs, applyTo(compose));
-
-    var mapComposePipe3 = compose3(applyMap3, flip(applyToComposePair)(applyTo(argsPipeToCompose)));
 
     var calcColour = function calcColour(width) {
       return function (deltaX) {
@@ -647,38 +653,17 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     // view
 
-    var template = function template(_ref12) {
-      var name = _ref12.name;
-      var fullName = _ref12.fullName;
-      var price = _ref12.price;
-      var imgSrc = _ref12.imgSrc;
-      var desc = _ref12.desc;
-      var origin = _ref12.origin;
-      var type = _ref12.type;
-      var alcohol = _ref12.alcohol;
-      return '\n    <div class="wine_overlay draggable"></div>\n    <div class="wine_title draggable">\n      <div class="wine_title_main draggable">\n        ' + name + '\n      </div>\n      <div class="wine_title_sub draggable">\n        ' + fullName + '\n      </div>\n    </div>\n    <div class="wine_bottle-container">\n      <img class="wine_bottle" src="' + imgSrc + '">\n      <div class="wine_bottle-shadow draggable"></div>\n    </div>\n    <div class="wine_price draggable">\n      $ ' + price + '.00\n    </div>\n    <div class="wine_separator draggable"></div>\n    <div class="wine_details draggable">\n      <div class="wine_details_text draggable">\n        ' + desc + '\n      </div>\n      <div class="wine_details_table draggable">\n        <div class="wine_origin wine_row">\n          <div class="wine_label">Origin</div>\n          <div class="wine_value">' + origin + '</div>\n        </div>\n        <div class="wine_type wine_row">\n          <div class="wine_label">Wine Type</div>\n          <div class="wine_value">' + type + '</div>\n        </div>\n        <div class="wine_alcohol wine_row">\n          <div class="wine_label">Alcohol</div>\n          <div class="wine_value">' + alcohol + '%</div>\n        </div>\n      </div>\n    </div>\n    <div class="wine_button-container draggable">\n      <div class="wine_button">\n        BUY NOW\n      </div>\n    </div>\n  ';
-    };
-
-    var createCard = function createCard(wine, indx) {
-      var card = document.createElement('div');
-      card.className = 'wine_card card_' + indx;
-      card.textContent = wine.name;
-      card.innerHTML = template(wine);
-
-      return card;
-    };
-
     var transformWithCalc = function transformWithCalc(start) {
       return function (end) {
         return 'transform: translateX(calc(' + start + ' - ' + end + 'px));';
       };
     };
 
-    var initCardTransform = compose(flip(transformWithCalc)(0), flip(addStyle));
+    var initCardTransform = compose(flip(transformWithCalc)(0), addStyle);
 
     var calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
 
-    var addActiveClass = flip(addClass)('wine_card--active');
+    var addActiveClass = addClass('wine_card--active');
 
     var ifEqAddActiveClass = function ifEqAddActiveClass(activeIndx) {
       return function (indx) {
@@ -698,18 +683,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var indxOffset = compose(mult(100), compose(add(7.5), toString, flip(concatCurry2)('vw')));
 
-    var updateCard = function updateCard(_ref13) {
-      var deltaX = _ref13.deltaX;
-      var offset = _ref13.offset;
-      var shouldTransition = _ref13.shouldTransition;
-      var activeIndx = _ref13.activeIndx;
-      return function (el, indx) {
-        compose(flip(addStyle)(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)), toggleClass(eq(activeIndx)(indx))('wine_card--active'))(el);
-      };
-    };
-
-    var updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
-
     var isBottleStart = function isBottleStart(target) {
       return function (action) {
         return and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_START));
@@ -721,6 +694,38 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return and(hasClass('wine_bottle')(target))(eq(action)(actions.TOUCH_END));
       };
     };
+
+    var initStyles = function initStyles(model) {
+      return compose(addClass('wine'), compose(prop('bgColour'), addStyle)(model));
+    };
+
+    var styleAndAppend = compose2(initStyles, appendChild);
+
+    var toggleExpandedClass = function toggleExpandedClass(_ref12) {
+      var expanded = _ref12.expanded;
+      return ifElseApply(always(expanded), addClass, removeClass);
+    };
+
+    var addColourStyle = function addColourStyle(_ref13) {
+      var bgColour = _ref13.bgColour;
+      return addStyle(bgColour);
+    };
+
+    var toggleClassAndChangeStyle = compose(flipApplyMap([flip(toggleExpandedClass)('wine--expanded'), addColourStyle]), applyTo(compose));
+
+    var updateCard = function updateCard(_ref14) {
+      var deltaX = _ref14.deltaX;
+      var offset = _ref14.offset;
+      var shouldTransition = _ref14.shouldTransition;
+      var activeIndx = _ref14.activeIndx;
+      return function (el, indx) {
+        compose(addStyle(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)), toggleClass(eq(activeIndx)(indx))('wine_card--active'))(el);
+      };
+    };
+
+    var updateEachCard = compose(updateCard, map, compose(pairs(Array.from), applyTo(compose)));
+
+    var queryAndUpdateCards = compose(updateEachCard, compose(pairs(queryAll('.wine_card')), applyTo(compose)));
 
     var eventListener = function eventListener(update) {
       return function (action) {
@@ -749,12 +754,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       };
     };
 
-    var initStyles = function initStyles(model) {
-      return compose(flip(addClass)('wine'), compose(prop('bgColour'), flip(addStyle))(model));
-    };
-
-    var styleAndAppend = compose2(initStyles, appendChild);
-
     var addEventListener = function addEventListener(eventName) {
       return function (listener) {
         return function (el) {
@@ -765,9 +764,30 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       };
     };
 
-    var view = function view(el, _ref14, update) {
-      var activeIndx = _ref14.activeIndx;
-      var wines = _ref14.wines;
+    var template = function template(_ref15) {
+      var name = _ref15.name;
+      var fullName = _ref15.fullName;
+      var price = _ref15.price;
+      var imgSrc = _ref15.imgSrc;
+      var desc = _ref15.desc;
+      var origin = _ref15.origin;
+      var type = _ref15.type;
+      var alcohol = _ref15.alcohol;
+      return '\n    <div class="wine_overlay draggable"></div>\n    <div class="wine_title draggable">\n      <div class="wine_title_main draggable">\n        ' + name + '\n      </div>\n      <div class="wine_title_sub draggable">\n        ' + fullName + '\n      </div>\n    </div>\n    <div class="wine_bottle-container">\n      <img class="wine_bottle" src="' + imgSrc + '">\n      <div class="wine_bottle-shadow draggable"></div>\n    </div>\n    <div class="wine_price draggable">\n      $ ' + price + '.00\n    </div>\n    <div class="wine_separator draggable"></div>\n    <div class="wine_details draggable">\n      <div class="wine_details_text draggable">\n        ' + desc + '\n      </div>\n      <div class="wine_details_table draggable">\n        <div class="wine_origin wine_row">\n          <div class="wine_label">Origin</div>\n          <div class="wine_value">' + origin + '</div>\n        </div>\n        <div class="wine_type wine_row">\n          <div class="wine_label">Wine Type</div>\n          <div class="wine_value">' + type + '</div>\n        </div>\n        <div class="wine_alcohol wine_row">\n          <div class="wine_label">Alcohol</div>\n          <div class="wine_value">' + alcohol + '%</div>\n        </div>\n      </div>\n    </div>\n    <div class="wine_button-container draggable">\n      <div class="wine_button">\n        BUY NOW\n      </div>\n    </div>\n  ';
+    };
+
+    var createCard = function createCard(wine, indx) {
+      var card = document.createElement('div');
+      card.className = 'wine_card card_' + indx;
+      card.textContent = wine.name;
+      card.innerHTML = template(wine);
+
+      return card;
+    };
+
+    var view = function view(el, _ref16, update) {
+      var activeIndx = _ref16.activeIndx;
+      var wines = _ref16.wines;
 
       var doUpdate = eventListener(update);
 
@@ -776,16 +796,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       composeWrap(map)(createCard, positionCard(activeIndx), styleAndAppend(model)(el))(wines.slice(0));
     };
 
-    var toggleExpandedClass = function toggleExpandedClass(_ref15) {
-      var expanded = _ref15.expanded;
-      return ifElseApply(always(expanded), flip(addClass)('wine--expanded'), flip(removeClass)('wine--expanded'));
-    };
-
-    var updateView = function updateView(el) {
-      return function (model) {
-        return compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), flip(addStyle)(model.bgColour))(el));
-      };
-    };
+    var updateView = compose(flip(applyMap)([toggleClassAndChangeStyle, queryAndUpdateCards]), applyTo(compose));
 
     // app
 
@@ -824,7 +835,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             newModel = update(newModel)(params);
 
             requestAnimationFrame(function () {
-              return updateView(el)(newModel);
+              return updateView(newModel)(el);
             });
           });
         };
