@@ -488,10 +488,10 @@
   };
 
   const toggleExpandedClass = ({ expanded }) =>
-    ifElseApply(always(expanded), addClass('wine--expanded'), removeClass('wine--expanded'));
+    ifElseApply(always(expanded), addClass, removeClass);
 
   const updateView = el => model =>
-    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), addStyle(model.bgColour))(el));
+    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model)('wine--expanded'), addStyle(model.bgColour))(el));
 
   // app
 
