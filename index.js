@@ -89,6 +89,12 @@
 
   const flipPropMapPair = compose(compose(propMapPair, applyToCompose2), flip);
 
+  const argsPipeToCompose = (a, b) => compose(a)(b);
+
+  const applyToComposePair = compose2(pairs, applyTo(compose));
+
+  const mapComposePipe3 = compose3(applyMap3, flip(applyToComposePair)(applyTo(argsPipeToCompose)));
+
   const freezeIt = Object.freeze;
 
   const appendChild = container => child => container.appendChild(child);
@@ -113,19 +119,19 @@
     return reduce(copyObj(obj))({})(Object.keys(obj));
   };
 
-  const addClass = el => className => {
+  const addClass = className => el => {
     el.classList.add(className);
 
     return el;
   };
 
-  const removeClass = el => className => {
+  const removeClass = className => el => {
     el.classList.remove(className);
 
     return el;
   };
 
-  const addStyle = el => elStyle => {
+  const addStyle = elStyle => el => {
     el.style.cssText = elStyle;
 
     return el;
@@ -136,10 +142,10 @@
   const checkAndHasClass = condition => className => compose(hasClass(className), isFalse, and(condition));
 
   const removeClassIf = condition => className =>
-    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), flip(removeClass)(className), identity);
+    ifElseApply(compose(hasClass(className), compose(isFalse, and)(condition)), removeClass(className), identity);
 
   const toggleClass = condition => className =>
-    ifElseApply(checkAndHasClass(condition)(className), flip(addClass)(className), removeClassIf(condition)(className));
+    ifElseApply(checkAndHasClass(condition)(className), addClass(className), removeClassIf(condition)(className));
 
   const queryAll = selector => el => el.querySelectorAll(selector);
 
@@ -256,7 +262,7 @@
 
   const getOffset = ssa => model => composeOffset(ssa)(model)();
 
-  const colourDiff = width => deltaX => ([start, end]) => start + Math.round((Math.abs(deltaX / width) * (end - start)));
+  const colourDiff = width => deltaX => ([start, end]) => add(start)(Math.round((mult(Math.abs(deltaX / width))(end - start))));
 
   const extractPairs = compose2(colourDiff, flipPropMapPair);
 
@@ -273,12 +279,6 @@
   const swipeRightCheck = compose3(swipeRightColours, always, compose(pairs(isRight), applyTo(ifElseApply)));
 
   const swipeLeftCheck = compose3(swipeLeftColours, always, ifElseApplyCurry(isLeft));
-
-  const argsPipeToCompose = (a, b) => compose(a)(b);
-
-  const applyToComposePair = compose2(pairs, applyTo(compose));
-
-  const mapComposePipe3 = compose3(applyMap3, flip(applyToComposePair)(applyTo(argsPipeToCompose)));
 
   const calcColour = width => deltaX => activeIndx => wines =>
     compose3(backgroundColour, mapComposePipe3)(width)(deltaX)(colours[activeIndx])(activeIndx)(wines)([swipeLeftCheck, swipeRightCheck]);
@@ -415,11 +415,11 @@
 
   const transformWithCalc = start => end => `transform: translateX(calc(${start} - ${end}px));`;
 
-  const initCardTransform = compose(flip(transformWithCalc)(0), flip(addStyle));
+  const initCardTransform = compose(flip(transformWithCalc)(0), addStyle);
 
   const calcTransformAndApply = compose(mult(100), add(7.5), toString, flip(concatCurry2)('vw'), initCardTransform);
 
-  const addActiveClass = flip(addClass)('wine_card--active');
+  const addActiveClass = addClass('wine_card--active');
 
   const ifEqAddActiveClass = activeIndx => indx => ifElseApplyAlwaysEq(activeIndx)(indx)(addActiveClass)(identity);
 
@@ -433,7 +433,7 @@
 
   const updateCard = ({ deltaX, offset, shouldTransition, activeIndx }) => (el, indx) => {
     compose(
-      flip(addStyle)(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
+      addStyle(calcStyle(indxOffset(indx))(deltaX + offset)(shouldTransition)),
       toggleClass(eq(activeIndx)(indx))('wine_card--active')
     )(el);
   };
@@ -465,7 +465,7 @@
     return update({ action, payload });
   };
 
-  const initStyles = model => compose(flip(addClass)('wine'), compose(prop('bgColour'), flip(addStyle))(model));
+  const initStyles = model => compose(addClass('wine'), compose(prop('bgColour'), addStyle)(model));
 
   const styleAndAppend = compose2(initStyles, appendChild);
 
@@ -488,10 +488,10 @@
   };
 
   const toggleExpandedClass = ({ expanded }) =>
-    ifElseApply(always(expanded), flip(addClass)('wine--expanded'), flip(removeClass)('wine--expanded'));
+    ifElseApply(always(expanded), addClass('wine--expanded'), removeClass('wine--expanded'));
 
   const updateView = el => model =>
-    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), flip(addStyle)(model.bgColour))(el));
+    compose(queryAll('.wine_card'), updateEachCard(model))(compose(toggleExpandedClass(model), addStyle(model.bgColour))(el));
 
   // app
 
